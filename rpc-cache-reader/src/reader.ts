@@ -2,10 +2,10 @@ import { JSONRPCResponse, JSONRPCServer } from "json-rpc-2.0";
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
-import { settings } from "./_config";
 import { Connection } from "@solana/web3.js";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { getProgramAccounts } from "./solana_utils/getProgramAccounts";
+import { settings } from "../../rpc-cache-utils/src/config";
 
 const connection = new Connection(
   "https://solana-api.projectserum.com/",

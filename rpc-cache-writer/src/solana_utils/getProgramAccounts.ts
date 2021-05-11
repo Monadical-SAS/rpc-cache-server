@@ -1,4 +1,7 @@
-import { connection, redisClient } from "./connection";
+import {
+  connection,
+  redisClient,
+} from "../../../rpc-cache-utils/src/connection";
 import { KeyedAccountInfo, PublicKey } from "@solana/web3.js";
 
 const webSocketsIds: Map<string, number> = new Map();

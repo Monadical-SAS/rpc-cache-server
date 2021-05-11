@@ -1,8 +1,8 @@
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
-import { settings } from "./_config";
 import { getProgramAccounts } from "./solana_utils/getProgramAccounts";
+import { settings } from "../../rpc-cache-utils/src/config";
 
 const app = express();
 app.use(bodyParser.json());

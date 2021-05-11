@@ -1,7 +1,7 @@
-import { redisClient } from "./connection";
 import { KeyedAccountInfo } from "@solana/web3.js";
 import { JSONRPCParams } from "json-rpc-2.0";
 import axios from "axios";
+import { redisClient } from "../../../rpc-cache-utils/src/connection";
 
 export const getProgramAccounts = (
   params: Partial<JSONRPCParams> | undefined
