@@ -1,16 +1,15 @@
-import {JSONRPCParams, JSONRPCResponse, JSONRPCServer} from "json-rpc-2.0";
+import { JSONRPCResponse, JSONRPCServer } from "json-rpc-2.0";
 import express from "express";
 import bodyParser from "body-parser";
-import redis from "redis";
 import cors from "cors";
-import axios from "axios";
-import {settings} from "./_config";
-import {Connection, KeyedAccountInfo} from "@solana/web3.js";
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import { settings } from "./_config";
+import { Connection } from "@solana/web3.js";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { getProgramAccounts } from "./solana_utils/getProgramAccounts";
 
 const connection = new Connection(
-  'https://solana-api.projectserum.com/',
-  'recent',
+  "https://solana-api.projectserum.com/",
+  "recent"
 );
 
 const server = new JSONRPCServer();
@@ -21,8 +20,8 @@ app.use(cors());
 
 for (const func of settings.cacheFunctions) {
   switch (func.name) {
-    case 'getProgramAccounts': {
-      server.addMethod('getProgramAccounts', getProgramAccounts);
+    case "getProgramAccounts": {
+      server.addMethod("getProgramAccounts", getProgramAccounts);
       break;
     }
     default:
@@ -30,18 +29,18 @@ for (const func of settings.cacheFunctions) {
   }
 }
 
-app.post('/json-rpc', (req, res) => {
+app.post("/json-rpc", (req, res) => {
   const jsonRPCRequest = req.body;
   // server.receive takes a JSON-RPC request and returns a Promise of a JSON-RPC response.
-  console.log('received request');
+  console.log("received request");
   console.log(jsonRPCRequest);
-  const functionNames = settings.cacheFunctions.map(func => func.name);
+  const functionNames = settings.cacheFunctions.map((func) => func.name);
   if (functionNames.indexOf(jsonRPCRequest.method) >= 0) {
-    server.receive(jsonRPCRequest).then(jsonRPCResponse => {
+    server.receive(jsonRPCRequest).then((jsonRPCResponse) => {
       if (jsonRPCResponse) {
         res.json(jsonRPCResponse);
       } else {
-        console.log('no response');
+        console.log("no response");
         res.sendStatus(204);
       }
     });
@@ -56,10 +55,12 @@ app.post('/json-rpc', (req, res) => {
 
 app.listen(3001);
 
-export const lambdaHandler = async (event : APIGatewayProxyEvent) : Promise<APIGatewayProxyResult> => {
-    const queries = JSON.stringify(event.queryStringParameters);
-    return {
-        statusCode : 200,
-        body : `Queries: ${queries}`
-    };
+export const lambdaHandler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  const queries = JSON.stringify(event.queryStringParameters);
+  return {
+    statusCode: 200,
+    body: `Queries: ${queries}`,
+  };
 };
