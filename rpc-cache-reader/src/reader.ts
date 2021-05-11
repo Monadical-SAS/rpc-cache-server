@@ -4,7 +4,7 @@ import bodyParser from "body-parser";
 import redis from "redis";
 import cors from "cors";
 import axios from "axios";
-import {settings} from "./config";
+import {settings} from "./_config";
 import {Connection, KeyedAccountInfo} from "@solana/web3.js";
 
 const connection = new Connection("https://solana-api.projectserum.com/", 'recent')
@@ -57,7 +57,8 @@ app.post("/json-rpc", (req, res) => {
   // server.receive takes a JSON-RPC request and returns a Promise of a JSON-RPC response.
   console.log("received request");
   console.log(jsonRPCRequest);
-  if (settings.cacheFunctions.indexOf(jsonRPCRequest.method) >= 0) {
+  const functionNames = settings.cacheFunctions.map(func => func.name)
+  if (functionNames.indexOf(jsonRPCRequest.method) >= 0) {
     server.receive(jsonRPCRequest).then((jsonRPCResponse) => {
       if (jsonRPCResponse) {
         res.json(jsonRPCResponse);
