@@ -1,11 +1,12 @@
-import { JSONRPCParams, JSONRPCResponse, JSONRPCServer } from 'json-rpc-2.0';
-import express from 'express';
-import bodyParser from 'body-parser';
-import redis from 'redis';
-import cors from 'cors';
-import axios from 'axios';
-import { settings } from './_config';
-import { Connection, KeyedAccountInfo } from '@solana/web3.js';
+import {JSONRPCParams, JSONRPCResponse, JSONRPCServer} from "json-rpc-2.0";
+import express from "express";
+import bodyParser from "body-parser";
+import redis from "redis";
+import cors from "cors";
+import axios from "axios";
+import {settings} from "./_config";
+import {Connection, KeyedAccountInfo} from "@solana/web3.js";
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 
 const connection = new Connection(
   'https://solana-api.projectserum.com/',
@@ -80,3 +81,11 @@ app.post('/json-rpc', (req, res) => {
 });
 
 app.listen(3001);
+
+export const lambdaHandler = async (event : APIGatewayProxyEvent) : Promise<APIGatewayProxyResult> => {
+    const queries = JSON.stringify(event.queryStringParameters);
+    return {
+        statusCode : 200,
+        body : `Queries: ${queries}`
+    };
+};

@@ -13,3 +13,7 @@ yarn-error.log*
 *.css
 *.css.map
 .vscode/*
+
+compiled/
+
+*.lock
