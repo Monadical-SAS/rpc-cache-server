@@ -6,6 +6,9 @@
   "author": "Thomas Lisankie (Monadical)",
   "license": "MIT",
   "private": false,
+  "scripts" : {
+    "compile" : "tsc"
+  },
   "dependencies": {
     "@types/aws-lambda": "^8.10.76",
     "aws-sdk": "^2.905.0",
