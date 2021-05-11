@@ -6,6 +6,7 @@ import cors from "cors";
 import axios from "axios";
 import {settings} from "./config";
 import {Connection, KeyedAccountInfo} from "@solana/web3.js";
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 
 const connection = new Connection("https://solana-api.projectserum.com/", 'recent')
 
@@ -79,3 +80,11 @@ app.post("/json-rpc", (req, res) => {
 });
 
 app.listen(3001);
+
+export const lambdaHandler = async (event : APIGatewayProxyEvent) : Promise<APIGatewayProxyResult> => {
+    const queries = JSON.stringify(event.queryStringParameters);
+    return {
+        statusCode : 200,
+        body : `Queries: ${queries}`
+    };
+};

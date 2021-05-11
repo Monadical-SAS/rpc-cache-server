@@ -23,7 +23,7 @@ Resources:
             Method: get
     Metadata:
       DockerTag: nodejs14.x-v1
-      DockerContext: ./reader
+      DockerContext: ./
       Dockerfile: Dockerfile
 
 Outputs:

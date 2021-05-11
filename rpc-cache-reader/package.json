@@ -6,10 +6,11 @@
   "author": "Thomas Lisankie (Monadical)",
   "license": "MIT",
   "private": false,
-  "scripts" : {
-    "compile" : "tsc"
+  "scripts": {
+    "compile": "tsc"
   },
   "dependencies": {
+    "@solana/web3.js": "^1.10.1",
     "@types/aws-lambda": "^8.10.76",
     "aws-sdk": "^2.905.0",
     "axios": "^0.21.1",
