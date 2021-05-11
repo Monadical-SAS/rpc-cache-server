@@ -1,9 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  sample-sam
+  rpc-cache-reader
 
-  Sample SAM Template for sample-sam
+  SAM template for reader component of RPC cache service
   
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
