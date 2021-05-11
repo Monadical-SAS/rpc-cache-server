@@ -12,6 +12,10 @@
   },
   "scripts": {
     "build": "./build.sh",
-    "lint:fix": "eslint --fix '*/{src,test}/**/*.ts' && prettier --write '*/{src,test}/**/*.ts'",
+    "lint:fix": "eslint --fix '*/{src,test}/**/*.ts' && prettier --write '*/{src,test}/**/*.ts'"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "json-rpc-2.0": "^0.2.16"
   }
 }

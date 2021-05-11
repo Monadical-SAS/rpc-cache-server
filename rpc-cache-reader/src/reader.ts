@@ -1,11 +1,10 @@
 import { JSONRPCParams, JSONRPCResponse, JSONRPCServer } from 'json-rpc-2.0';
 import express from 'express';
 import bodyParser from 'body-parser';
-import redis from 'redis';
 import cors from 'cors';
-import axios from 'axios';
 import { settings } from './_config';
 import { Connection, KeyedAccountInfo } from '@solana/web3.js';
+import { getProgramAccounts } from './solana_utils/getProgramAccounts';
 
 const connection = new Connection(
   'https://solana-api.projectserum.com/',
@@ -13,47 +12,21 @@ const connection = new Connection(
 );
 
 const server = new JSONRPCServer();
-const redisClient = redis.createClient();
 
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-const getProgramAccounts = (params: Partial<JSONRPCParams> | undefined) => {
-  return new Promise((resolve, reject) => {
-    if (params) {
-      const programID = (params as any[])[0];
-      const filters = (params as any[])[1];
-      redisClient.hvals(programID, function (err, reply) {
-        if (err) {
-          reject(err);
-        } else {
-          if (reply === null) {
-            axios({
-              method: 'post',
-              url: 'http://localhost:3001/',
-              data: { programID, filters },
-            });
-            reject(err);
-          }
-          const parsed: Array<KeyedAccountInfo> = [];
-          for (const acc of reply) {
-            try {
-              parsed.push(JSON.parse(acc));
-            } catch (e) {
-              console.log(acc);
-            }
-          }
-          resolve(parsed);
-        }
-      });
-    } else {
-      resolve([]);
+for (const func of settings.cacheFunctions) {
+  switch (func.name) {
+    case 'getProgramAccounts': {
+      server.addMethod('getProgramAccounts', getProgramAccounts);
+      break;
     }
-  });
-};
-
-server.addMethod('getProgramAccounts', getProgramAccounts);
+    default:
+      break;
+  }
+}
 
 app.post('/json-rpc', (req, res) => {
   const jsonRPCRequest = req.body;
