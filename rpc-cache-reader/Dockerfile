@@ -1,7 +1,8 @@
-# syntax=docker/dockerfile:1
-FROM node:15-buster
-RUN apt install python g++ make
-WORKDIR /rpc-cache-reader
-COPY . .
+FROM public.ecr.aws/lambda/nodejs:14
+
+COPY ./compiled/reader.js ./compiled/config.js package.json ./
+
 RUN npm install
-CMD ["node", "src/reader.js"]
+
+# Command can be overwritten by providing a different command in the template directly.
+CMD ["reader.lambdaHandler"]

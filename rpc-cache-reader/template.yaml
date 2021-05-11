@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  rpc-cache-reader
+
+  SAM template for reader component of RPC cache service
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  RPCReaderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Events:
+        RPCReader:
+          Type: Api
+          Properties:
+            Path: /
+            Method: get
+    Metadata:
+      DockerTag: nodejs14.x-v1
+      DockerContext: ./
+      Dockerfile: Dockerfile
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  RPCReaderApi:
+    Description: "API Gateway endpoint URL for Prod stage for RPC cache service"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  RPCReaderFunction:
+    Description: "RPC Reader Lambda Function ARN"
+    Value: !GetAtt RPCReaderFunction.Arn
+  RPCReaderFunctionIamRole:
+    Description: "Implicit IAM Role created for RPC Reader function"
+    Value: !GetAtt RPCReaderFunctionRole.Arn
