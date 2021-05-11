@@ -1,0 +1,17 @@
+{
+  "devDependencies": {
+    "eslint": "^7.26.0",
+    "eslint-config-prettier": "^8.3.0",
+    "prettier": "^2.3.0"
+  },
+  "prettier": {
+    "arrowParens": "avoid",
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "all"
+  },
+  "scripts": {
+    "build": "./build.sh",
+    "lint:fix": "eslint --fix '*/{src,test}/**/*.ts' && prettier --write '*/{src,test}/**/*.ts'",
+  }
+}
