@@ -1,13 +1,16 @@
-import {JSONRPCParams, JSONRPCResponse, JSONRPCServer} from "json-rpc-2.0";
-import express from "express";
-import bodyParser from "body-parser";
-import redis from "redis";
-import cors from "cors";
-import axios from "axios";
-import {settings} from "./_config";
-import {Connection, KeyedAccountInfo} from "@solana/web3.js";
+import { JSONRPCParams, JSONRPCResponse, JSONRPCServer } from 'json-rpc-2.0';
+import express from 'express';
+import bodyParser from 'body-parser';
+import redis from 'redis';
+import cors from 'cors';
+import axios from 'axios';
+import { settings } from './_config';
+import { Connection, KeyedAccountInfo } from '@solana/web3.js';
 
-const connection = new Connection("https://solana-api.projectserum.com/", 'recent')
+const connection = new Connection(
+  'https://solana-api.projectserum.com/',
+  'recent',
+);
 
 const server = new JSONRPCServer();
 const redisClient = redis.createClient();
@@ -16,7 +19,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-const getProgramAccounts =  (params: Partial<JSONRPCParams> | undefined) => {
+const getProgramAccounts = (params: Partial<JSONRPCParams> | undefined) => {
   return new Promise((resolve, reject) => {
     if (params) {
       const programID = (params as any[])[0];
@@ -27,16 +30,16 @@ const getProgramAccounts =  (params: Partial<JSONRPCParams> | undefined) => {
         } else {
           if (reply === null) {
             axios({
-              method: "post",
-              url: "http://localhost:3001/",
-              data: {programID, filters}
+              method: 'post',
+              url: 'http://localhost:3001/',
+              data: { programID, filters },
             });
-            reject(err)
+            reject(err);
           }
-          const parsed: Array<KeyedAccountInfo> = []
+          const parsed: Array<KeyedAccountInfo> = [];
           for (const acc of reply) {
             try {
-              parsed.push(JSON.parse(acc))
+              parsed.push(JSON.parse(acc));
             } catch (e) {
               console.log(acc);
             }
@@ -50,30 +53,29 @@ const getProgramAccounts =  (params: Partial<JSONRPCParams> | undefined) => {
   });
 };
 
-server.addMethod("getProgramAccounts", getProgramAccounts);
+server.addMethod('getProgramAccounts', getProgramAccounts);
 
-app.post("/json-rpc", (req, res) => {
+app.post('/json-rpc', (req, res) => {
   const jsonRPCRequest = req.body;
   // server.receive takes a JSON-RPC request and returns a Promise of a JSON-RPC response.
-  console.log("received request");
+  console.log('received request');
   console.log(jsonRPCRequest);
-  const functionNames = settings.cacheFunctions.map(func => func.name)
+  const functionNames = settings.cacheFunctions.map(func => func.name);
   if (functionNames.indexOf(jsonRPCRequest.method) >= 0) {
-    server.receive(jsonRPCRequest).then((jsonRPCResponse) => {
+    server.receive(jsonRPCRequest).then(jsonRPCResponse => {
       if (jsonRPCResponse) {
         res.json(jsonRPCResponse);
       } else {
-        console.log("no response");
+        console.log('no response');
         res.sendStatus(204);
       }
     });
   } else {
-    (connection as any)._rpcRequest(
-      jsonRPCRequest.method,
-      jsonRPCRequest.params
-    ).then((resp: JSONRPCResponse) => {
-      res.json(resp);
-    });
+    (connection as any)
+      ._rpcRequest(jsonRPCRequest.method, jsonRPCRequest.params)
+      .then((resp: JSONRPCResponse) => {
+        res.json(resp);
+      });
   }
 });
 
