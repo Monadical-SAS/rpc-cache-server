@@ -1,8 +1,8 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import cors from 'cors';
-import { settings } from './_config';
-import { getProgramAccounts } from './solana_utils/getProgramAccounts';
+import express from "express";
+import bodyParser from "body-parser";
+import cors from "cors";
+import { getProgramAccounts } from "./solana_utils/getProgramAccounts";
+import { settings } from "../../rpc-cache-utils/src/config";
 
 const app = express();
 app.use(bodyParser.json());
@@ -11,10 +11,10 @@ app.use(cors());
 const callCorrespondingCachedMethod = async (
   name: string,
   param: any,
-  setWebSocket = false,
+  setWebSocket = false
 ) => {
   switch (name) {
-    case 'getProgramAccounts': {
+    case "getProgramAccounts": {
       await getProgramAccounts(param, setWebSocket);
       break;
     }
@@ -26,16 +26,16 @@ const callCorrespondingCachedMethod = async (
 (async () => {
   for (const func of settings.cacheFunctions) {
     console.log(
-      `Populating cache with method: ${func.name} for params: ${func.params}`,
+      `Populating cache with method: ${func.name} for params: ${func.params}`
     );
     for (const mainParam of func.params) {
       await callCorrespondingCachedMethod(func.name, mainParam, true);
     }
   }
-  console.log('Finished Populating cache');
+  console.log("Finished Populating cache");
 })();
 
-app.post('/', (req, res) => {
+app.post("/", (req, res) => {
   // when this is called, it means a cache miss happened and the cache needs to be written to.
   // to do this, make an RPC call to the full node and write the value to cache.
   const { method, mainParam } = req.body;

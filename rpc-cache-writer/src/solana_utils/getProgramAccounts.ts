@@ -1,14 +1,17 @@
-import { connection, redisClient } from './connection';
-import { KeyedAccountInfo, PublicKey } from '@solana/web3.js';
+import {
+  connection,
+  redisClient,
+} from "../../../rpc-cache-utils/src/connection";
+import { KeyedAccountInfo, PublicKey } from "@solana/web3.js";
 
 const webSocketsIds: Map<string, number> = new Map();
 
 export const getProgramAccounts = async (
   programID: string,
-  setWebSocket = false,
+  setWebSocket = false
 ): Promise<void> => {
   console.log(`Fetching: getProgramAccounts of ${programID}`);
-  const resp = await (connection as any)._rpcRequest('getProgramAccounts', [
+  const resp = await (connection as any)._rpcRequest("getProgramAccounts", [
     programID,
     {},
   ]);
@@ -18,22 +21,22 @@ export const getProgramAccounts = async (
     const prevSubId = webSocketsIds.get(programID);
     if (prevSubId) {
       console.log(
-        `removing listener Websocket for: onProgramAccountChange of ${programID}`,
+        `removing listener Websocket for: onProgramAccountChange of ${programID}`
       );
       await connection.removeProgramAccountChangeListener(prevSubId);
     }
     console.log(
-      `Creating Websocket for: onProgramAccountChange of ${programID}`,
+      `Creating Websocket for: onProgramAccountChange of ${programID}`
     );
     const subId = connection.onProgramAccountChange(
       new PublicKey(programID),
       async (info: KeyedAccountInfo) => {
         const pubkey =
-          typeof info.accountId === 'string'
+          typeof info.accountId === "string"
             ? info.accountId
             : info.accountId.toBase58();
         redisClient.hset(programID, pubkey, JSON.stringify(info.accountInfo));
-      },
+      }
     );
     webSocketsIds.set(programID, subId);
   }
