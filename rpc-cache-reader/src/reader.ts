@@ -25,9 +25,7 @@ const getProgramAccounts =  (params: Partial<JSONRPCParams> | undefined) => {
         if (err) {
           reject(err);
         } else {
-          if (reply === null) { // if cache miss
-            // What it needs to do:
-            // 1. Notify the writer
+          if (reply === null) {
             axios({
               method: "post",
               url: "http://localhost:3001/",
