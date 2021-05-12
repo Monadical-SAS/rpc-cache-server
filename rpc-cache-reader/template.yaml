@@ -23,8 +23,8 @@ Resources:
             Method: get
     Metadata:
       DockerTag: nodejs14.x-v1
-      DockerContext: ./
-      Dockerfile: Dockerfile
+      DockerContext: ../
+      Dockerfile: rpc-cache-reader/Dockerfile
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

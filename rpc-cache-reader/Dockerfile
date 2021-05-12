@@ -1,6 +1,6 @@
 FROM public.ecr.aws/lambda/nodejs:14
 
-COPY ./compiled/reader.js ./compiled/config.js package.json ./
+COPY rpc-cache-reader/compiled/reader.js rpc-cache-reader/compiled/config.js ./package.json ./
 
 RUN npm install
 
