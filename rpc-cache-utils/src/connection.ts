@@ -1,8 +1,9 @@
 import { Connection } from "@solana/web3.js";
-import redis from "redis";
+import { getRedisClient } from "./redisClient";
+
 console.log("creating connection");
 export const connection = new Connection(
   "https://solana-api.projectserum.com/",
   "recent"
 );
-export const redisClient = redis.createClient();
+export const redisClient = getRedisClient();

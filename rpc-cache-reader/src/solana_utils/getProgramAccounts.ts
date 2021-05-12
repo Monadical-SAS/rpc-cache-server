@@ -9,7 +9,7 @@ export const getProgramAccounts = (
   return new Promise((resolve, reject) => {
     if (params) {
       const programID = (params as any[])[0];
-      //const filters = (params as any[])[1];
+      const filters = (params as any[])[1];
       redisClient.hvals(programID, function (err, reply) {
         if (err) {
           reject(err);
@@ -21,16 +21,12 @@ export const getProgramAccounts = (
               data: { method: "getProgramAccounts", mainParam: programID },
             });
             reject(err);
+          } else {
+            const parsed: Array<KeyedAccountInfo> = reply.map((acc) =>
+              JSON.parse(acc)
+            );
+            resolve(parsed);
           }
-          const parsed: Array<KeyedAccountInfo> = [];
-          for (const acc of reply) {
-            try {
-              parsed.push(JSON.parse(acc));
-            } catch (e) {
-              console.log(acc);
-            }
-          }
-          resolve(parsed);
         }
       });
     } else {
@@ -38,3 +34,9 @@ export const getProgramAccounts = (
     }
   });
 };
+
+// const filterProgramAccounts = (accounts: Array<KeyedAccountInfo>, config: Map<string, any>): Array<KeyedAccountInfo>  => {
+//   const filters = config.get("filters")
+//   config.delete("filters")
+//   return accounts
+// }

@@ -21,6 +21,15 @@ const client = new JSONRPCClient((jsonRPCRequest) =>
     })
 );
 
+const filters = [
+  {
+    dataSize: 1184,
+  },
+];
+const params = {
+  commitment: 'recent',
+  filters,
+}
 client
-    .request("getProgramAccounts", ["WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC", {}]).catch(console.error)
+    .request("getProgramAccounts", ["WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC", params]).catch(console.error)
     .then((result) => console.log(result));
