@@ -17,7 +17,7 @@ export const getProgramAccounts = (
           if (reply === null) {
             axios({
               method: "post",
-              url: "http://localhost:3001/",
+              url: "http://18.116.202.148:3000",
               data: { method: "getProgramAccounts", mainParam: programID },
             });
             reject(err);
