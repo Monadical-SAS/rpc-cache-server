@@ -32,4 +32,4 @@ const params = {
 }
 client
     .request("getProgramAccounts", ["WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC", params]).catch(console.error)
-    .then((result) => console.log(result));
+    .then((result) => console.log(result, result.length));

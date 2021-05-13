@@ -1,4 +1,5 @@
 export const settings = {
+  commitment: "recent",
   cacheFunctions: [
     {
       name: "getProgramAccounts",
