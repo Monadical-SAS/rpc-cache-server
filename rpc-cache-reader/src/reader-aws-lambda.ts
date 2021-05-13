@@ -1,17 +1,11 @@
 import { JSONRPCResponse, JSONRPCServer } from "json-rpc-2.0";
-import express from "express";
-import bodyParser from "body-parser";
-import cors from "cors";
-import { connection } from "../../rpc-cache-utils/src/connection";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { getProgramAccounts } from "./solana_utils/getProgramAccounts";
 import { settings } from "../../rpc-cache-utils/src/config";
+import { connection } from "../../rpc-cache-utils/src/connection";
+
 
 const server = new JSONRPCServer();
-
-const app = express();
-app.use(bodyParser.json());
-app.use(cors());
 
 for (const name of settings.cacheFunctions.names) {
   switch (name) {
@@ -24,10 +18,11 @@ for (const name of settings.cacheFunctions.names) {
   }
 }
 
-app.post("/json-rpc", (req, res) => {
-  const jsonRPCRequest = req.body;
-  // server.receive takes a JSON-RPC request and returns a Promise of a JSON-RPC response.
-  console.log("received request", jsonRPCRequest.method);
+export const lambdaHandler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  const jsonRPCRequest = JSON.parse(event.body as string);
+
   const functionNames = settings.cacheFunctions.names;
   if (functionNames.indexOf(jsonRPCRequest.method) >= 0) {
     server.receive(jsonRPCRequest).then((jsonRPCResponse) => {
@@ -37,37 +32,47 @@ app.post("/json-rpc", (req, res) => {
           ._rpcRequest(jsonRPCRequest.method, jsonRPCRequest.params)
           .catch((e: any) => {
             jsonRPCResponse.error = e;
-            res.json(jsonRPCResponse);
+            return {
+              statusCode: 200,
+              body: JSON.stringify(jsonRPCResponse),
+            };
           })
           .then((resp: JSONRPCResponse) => {
-            res.json(resp);
+            return {
+              statusCode: 200,
+              body: JSON.stringify(resp),
+            };
           });
       } else if (jsonRPCResponse && !jsonRPCResponse.error) {
-        res.json(jsonRPCResponse);
+        return {
+          statusCode: 200,
+          body: JSON.stringify(jsonRPCResponse),
+        };
       } else {
-        res.sendStatus(204);
+        return {
+          statusCode: 204,
+          body: "There was no response.",
+        };
       }
     });
   } else {
     (connection as any)
       ._rpcRequest(jsonRPCRequest.method, jsonRPCRequest.params)
       .catch((e: any) => {
-        res.json({ error: e });
+        return {
+          statusCode: 500,
+          body: e.toString(),
+        };
       })
       .then((resp: JSONRPCResponse) => {
-        res.json(resp);
+        return {
+          statusCode: 200,
+          body: JSON.stringify(resp),
+        };
       });
   }
-});
-
-app.listen(3001);
-
-export const lambdaHandler = async (
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
-  const queries = JSON.stringify(event.queryStringParameters);
   return {
-    statusCode: 200,
-    body: `Queries: ${queries}`,
+    statusCode: 204,
+    body: "There was no response.",
   };
 };

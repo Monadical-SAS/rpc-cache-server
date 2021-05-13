@@ -12,10 +12,14 @@ const callCorrespondingCachedMethod = async (
   name: string,
   param: any,
   setWebSocket = false
-) => {
+): Promise<void> => {
   switch (name) {
     case "getProgramAccounts": {
-      await getProgramAccounts(param, setWebSocket);
+      if (
+        settings.cacheFunctions.params.getProgramAccounts.indexOf(param) >= 0
+      ) {
+        await getProgramAccounts(param, setWebSocket);
+      }
       break;
     }
     default:
@@ -24,12 +28,13 @@ const callCorrespondingCachedMethod = async (
 };
 
 (async () => {
-  for (const func of settings.cacheFunctions) {
-    console.log(
-      `Populating cache with method: ${func.name} for params: ${func.params}`
-    );
-    for (const mainParam of func.params) {
-      await callCorrespondingCachedMethod(func.name, mainParam, true);
+  for (const name of settings.cacheFunctions.names) {
+    const params = (settings.cacheFunctions.params as Record<string, any>)[
+      name
+    ];
+    console.log(`Populating cache with method: ${name} for params: ${params}`);
+    for (const mainParam of params) {
+      await callCorrespondingCachedMethod(name, mainParam, true);
     }
   }
   console.log("Finished Populating cache");
@@ -39,11 +44,14 @@ app.post("/", (req, res) => {
   // when this is called, it means a cache miss happened and the cache needs to be written to.
   // to do this, make an RPC call to the full node and write the value to cache.
   const { method, mainParam } = req.body;
-  console.log(`Cache invalidation: ${{ method, mainParam }}`);
-  (async () => {
-    await callCorrespondingCachedMethod(method, mainParam, true);
-  })();
+  const functionNames = settings.cacheFunctions.names;
+  if (functionNames.indexOf(method) >= 0) {
+    console.log(`Cache invalidation: ${method} - ${mainParam}`);
+    (async () => {
+      await callCorrespondingCachedMethod(method, mainParam, true);
+    })();
+  }
   return res.sendStatus(200);
 });
 
-app.listen(3002);
+app.listen(3000);
