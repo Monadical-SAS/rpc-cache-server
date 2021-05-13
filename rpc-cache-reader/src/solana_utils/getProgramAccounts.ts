@@ -7,6 +7,7 @@ import util from "util";
 export const getProgramAccounts = async (
   params: Partial<JSONRPCParams> | undefined
 ): Promise<Array<any>> => {
+    console.log("In getProgramAccounts function in solana_utils/getProgramAccounts.ts in read");
   return new Promise((resolve, reject) => {
     if (params) {
       const programID = (params as any[])[0];
