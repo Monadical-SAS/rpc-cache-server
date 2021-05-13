@@ -15,7 +15,7 @@ package-lock.json
 *.css
 *.css.map
 .vscode/*
-
+.env
 compiled/
 
 *.lock
