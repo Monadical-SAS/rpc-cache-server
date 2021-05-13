@@ -20,11 +20,11 @@ Resources:
           Type: Api
           Properties:
             Path: /
-            Method: get
+            Method: post
     Metadata:
-      DockerTag: nodejs14.x-v1
-      DockerContext: ./
-      Dockerfile: Dockerfile
+      DockerTag: rpc-cache-reader
+      DockerContext: ../
+      Dockerfile: rpc-cache-reader/Dockerfile
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

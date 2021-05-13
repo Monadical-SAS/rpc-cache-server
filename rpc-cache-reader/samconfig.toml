@@ -3,8 +3,9 @@ version = 0.1
 [default.deploy]
 [default.deploy.parameters]
 stack_name = "rpc-cache-reader"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1e9s9gxb7cx1m"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-bcqs2nd68odx"
 s3_prefix = "rpc-cache-reader"
 region = "us-east-2"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
+image_repositories = ["RPCReaderFunction=786003381753.dkr.ecr.us-east-2.amazonaws.com/solana-rpc-cache"]
