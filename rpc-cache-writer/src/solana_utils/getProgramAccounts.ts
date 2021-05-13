@@ -18,7 +18,7 @@ export const getProgramAccounts = async (
     programID,
     { commitment: settings.commitment },
   ]);
-  await setRedisAccounts(resp.result, programID);
+  setRedisAccounts(resp.result, programID);
 
   if (setWebSocket) {
     const prevSubId = webSocketsIds.get(programID);
@@ -54,7 +54,7 @@ export const getProgramAccounts = async (
   }
 };
 
-const setRedisAccounts = async (
+const setRedisAccounts = (
   accounts: Array<ParsedKeyedAccountInfo>,
   programID: string
 ) => {
