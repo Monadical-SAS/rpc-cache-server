@@ -32,8 +32,8 @@ for (const func of settings.cacheFunctions) {
 app.post("/json-rpc", (req, res) => {
   const jsonRPCRequest = req.body;
   // server.receive takes a JSON-RPC request and returns a Promise of a JSON-RPC response.
-  console.log("received request");
-  console.log(jsonRPCRequest);
+  // console.log("received request");
+  // console.log(jsonRPCRequest);
   const functionNames = settings.cacheFunctions.map((func) => func.name);
   if (functionNames.indexOf(jsonRPCRequest.method) >= 0) {
     server.receive(jsonRPCRequest).then((jsonRPCResponse) => {

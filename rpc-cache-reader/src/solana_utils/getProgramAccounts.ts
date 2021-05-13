@@ -2,6 +2,8 @@ import { KeyedAccountInfo } from "@solana/web3.js";
 import { JSONRPCParams } from "json-rpc-2.0";
 import axios from "axios";
 import { redisClient } from "../../../rpc-cache-utils/src/connection";
+import { ParsedKeyedAccountInfo } from "../../../rpc-cache-utils/src/utils";
+import bs58 from "bs58";
 
 export const getProgramAccounts = (
   params: Partial<JSONRPCParams> | undefined
@@ -22,10 +24,11 @@ export const getProgramAccounts = (
             });
             reject(err);
           } else {
-            const parsed: Array<KeyedAccountInfo> = reply.map((acc) =>
+            const parsed: Array<ParsedKeyedAccountInfo> = reply.map((acc) =>
               JSON.parse(acc)
             );
-            resolve(parsed);
+            const filteredData = filterProgramAccounts(parsed, filters, programID)
+            resolve(filteredData);
           }
         }
       });
@@ -35,8 +38,34 @@ export const getProgramAccounts = (
   });
 };
 
-// const filterProgramAccounts = (accounts: Array<KeyedAccountInfo>, config: Map<string, any>): Array<KeyedAccountInfo>  => {
-//   const filters = config.get("filters")
-//   config.delete("filters")
-//   return accounts
-// }
+const filterProgramAccounts = (
+  accounts: Array<ParsedKeyedAccountInfo>,
+  config: Record<string, unknown>,
+  programID: string,
+): Array<ParsedKeyedAccountInfo>  => {
+  console.log(config)
+  const filters = config.filters || []
+  const encoding = config.encoding || "base58"
+  delete config.filters
+  const filteredAccounts = accounts.filter((acc) => {
+    const decodedData = bs58.decode((acc.account.data as string));
+    acc.account.data = decodedData;
+    for (const filter of (filters as any[])) {
+      const dataSize = filter.dataSize;
+      if (dataSize && decodedData.length === dataSize) {
+        return true;
+      }
+    }
+    return false
+  })
+  const parsedAccounts = filteredAccounts.map((acc) => {
+    const decodedData = acc.account.data;
+    if (encoding === "base64") {
+      acc.account.data = (decodedData as Buffer).toString("base64")
+    } else {
+      acc.account.data = bs58.encode(decodedData as Buffer)
+    }
+    return acc
+  })
+  return parsedAccounts
+}

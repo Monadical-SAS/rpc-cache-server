@@ -23,11 +23,12 @@ const client = new JSONRPCClient((jsonRPCRequest) =>
 
 const filters = [
   {
-    dataSize: 1184,
+    dataSize: 34,
   },
 ];
 const params = {
   commitment: 'recent',
+  encoding: 'base64',
   filters,
 }
 client

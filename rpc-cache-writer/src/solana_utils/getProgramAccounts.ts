@@ -1,23 +1,13 @@
-import { AccountInfo, KeyedAccountInfo, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
 import {
   connection,
   redisClient,
 } from "../../../rpc-cache-utils/src/connection";
 import { settings } from "../../../rpc-cache-utils/src/config";
+import { ParsedKeyedAccountInfo } from "../../../rpc-cache-utils/src/utils";
 
 const webSocketsIds: Map<string, number> = new Map();
-
-interface ParsedKeyedAccountInfo {
-  pubkey: string;
-  account: {
-    executable: boolean;
-    lamports: number;
-    rentEpoch: number;
-    owner: string;
-    data: string;
-  };
-}
 
 export const getProgramAccounts = async (
   programID: string,
