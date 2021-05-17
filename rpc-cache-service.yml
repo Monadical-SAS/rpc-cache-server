@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  StackName:
+    Type: String
+    Description: The name of the networking stack that 
+      these resources are put into.
+  WriterServiceName:
+    Type: String
+    Description: A human-readable name for the service.
+  HealthCheckPath:
+    Type: String
+    Default: /health
+    Description: Path to perform the healthcheck on each instance.
+  HealthCheckIntervalSeconds:
+    Type: Number
+    Default: 5
+    Description: Number of seconds to wait between each health check.
+  WriterImageUrl:
+    Type: String
+    Description: The url of a docker image that will handle incoming traffic.
+  ContainerPort:
+    Type: Number
+    Default: 3000
+    Description: The port number the application inside the docker container 
+      is binding to.
+  ContainerCpu:
+    Type: Number
+    Default: 1024
+    Description: How much CPU to give the container. 1024 is 1 CPU.
+  ContainerMemory:
+    Type: Number
+    Default: 2048
+    Description: How much memory in megabytes to give the container.
+  DesiredCount:
+    Type: Number
+    Default: 1
+    Description: How many copies of the service task to run.
+  CacheNodeCount:
+    Type: Number
+    Default: 2
+    Description: The number of cache nodes to run.
+  CacheNodeType:
+    Type: String
+    Default: "cache.t2.small"
+    Description: The type of EC2 instance to use for cache nodes
+  RedisVersion:
+    Type: String
+    Default: "6.0.5"
+    Description: The version of Redis to use for the cache
+
+Resources:
+  # The cache itself
+  CacheSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      SubnetIds:
+        - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'PublicSubnet1']]
+        - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'PublicSubnet2']]
+        - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'PublicSubnet3']]
+  RPCCache:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties:
+      AutoMinorVersionUpgrade: yes
+      CacheNodeType: !Ref "CacheNodeType"
+      CacheSubnetGroupName: !Ref "CacheSubnetGroup"
+      ClusterName: "rpc-cache"
+      Engine: "redis"
+      EngineVersion: !Ref "RedisVersion"
+      NumCacheNodes: !Ref "CacheNodeCount"
+
+  # Writer
+  WriterTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'WriterServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'StackName', 'ECSTaskExecutionRole']]
+      ContainerDefinitions:
+        - Name: !Ref 'WriterServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'WriterImageUrl'
+          PortMappings:
+            - ContainerPort: !Ref 'ContainerPort'
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref 'WriterServiceName'
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Ref 'WriterServiceName'
+
+  WriterService:
+    Type: AWS::ECS::Service
+    Properties:
+      WriterServiceName: !Ref 'WriterServiceName'
+      Cluster:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'StackName', 'WriterClusterName']]
+      LaunchType: FARGATE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      DesiredCount: !Ref 'DesiredCount'
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'WriterECSSecurityGroup']]
+          Subnets:
+            - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'PublicSubnet1']]
+      TaskDefinition: !Ref 'WriterTaskDefinition'
