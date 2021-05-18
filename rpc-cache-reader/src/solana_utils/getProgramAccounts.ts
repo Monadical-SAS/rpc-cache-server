@@ -28,9 +28,9 @@ export const getProgramAccounts = async (
 };
 
 const filterProgramAccounts = (
-  accounts: Array<ParsedKeyedAccountInfo>,
-  config: Record<string, unknown>,
-  programID: string
+    accounts: Array<ParsedKeyedAccountInfo>,
+    config: Record<string, unknown>,
+    programID: string
 ): Array<ParsedKeyedAccountInfo> => {
   const filters = config.filters || [];
   const encoding = config.encoding || "binary";
