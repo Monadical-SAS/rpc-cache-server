@@ -1,9 +1,9 @@
 {
-  "name": "rpc-cache-reader",
+  "name": "rpc-cache-server",
   "version": "0.0.1",
   "description": "A server to cache results of (expensive) RPC requests made to the Solana JSON RPC API",
   "main": "src/reader.js",
-  "author": "Thomas Lisankie (Monadical)",
+  "author": "Monadical",
   "license": "MIT",
   "private": false,
   "dependencies": {
@@ -20,8 +20,13 @@
     "redis": "^3.1.2",
     "typescript": "^4.2.4"
   },
+  "files": [
+    "dist/lib",
+    "dist.browser/lib"
+  ],
   "scripts": {
-    "lint:fix": "eslint --fix '*/{src,test}/**/*.ts' && prettier --write '*/{src,test}/**/*.ts'"
+    "lint:fix": "eslint --fix '*/{src,test}/**/*.ts' && prettier --write '*/{src,test}/**/*.ts'",
+    "build": "tsc && env BROWSER=true tsc -p tsconfig.browser.json"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.76",

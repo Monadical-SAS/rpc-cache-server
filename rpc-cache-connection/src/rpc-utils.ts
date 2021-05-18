@@ -14,6 +14,7 @@ type RpcBatchRequest = (requests: RpcParams[]) => any;
 
 export function createRpcClient(url: string, useHttps: boolean): RpcClient {
   let agentManager: AgentManager | undefined;
+  console.log(process.env.BROWSER);
   if (!process.env.BROWSER) {
     agentManager = new AgentManager(useHttps);
   }
