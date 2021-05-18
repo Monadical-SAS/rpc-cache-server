@@ -1,6 +1,6 @@
-import {JSONRPCParams} from "json-rpc-2.0";
-import {redisClient} from "../../../rpc-cache-utils/src/connection";
-import {ParsedKeyedAccountInfo} from "../../../rpc-cache-utils/src/utils";
+import { JSONRPCParams } from "json-rpc-2.0";
+import { redisClient } from "../../../rpc-cache-utils/src/connection";
+import { ParsedKeyedAccountInfo } from "../../../rpc-cache-utils/src/utils";
 import bs58 from "bs58";
 
 export const getProgramAccounts = async (
@@ -28,9 +28,9 @@ export const getProgramAccounts = async (
 };
 
 const filterProgramAccounts = (
-    accounts: Array<ParsedKeyedAccountInfo>,
-    config: Record<string, unknown>,
-    programID: string
+  accounts: Array<ParsedKeyedAccountInfo>,
+  config: Record<string, unknown>,
+  programID: string
 ): Array<ParsedKeyedAccountInfo> => {
   const filters = config.filters || [];
   const encoding = config.encoding || "binary";
@@ -40,7 +40,7 @@ const filterProgramAccounts = (
     if (acc.account.owner !== programID) {
       return false;
     }
-    const decodedData = Buffer.from((acc.account.data[0] as string), "base64");
+    const decodedData = Buffer.from(acc.account.data[0] as string, "base64");
 
     acc.account.data = decodedData;
     for (const filter of filters as any[]) {
@@ -62,7 +62,7 @@ const filterProgramAccounts = (
           return false;
         }
         // @ts-ignore
-        console.log("first decoding", end - start)
+        console.log("first decoding", end - start);
         if (memcmpData.offset > decodedData.length) {
           return false;
         }
@@ -78,7 +78,7 @@ const filterProgramAccounts = (
             memcmpData.offset,
             memcmpData.offset + dBytes.length
           ) === 0
-        )
+        );
       }
     }
     return true;

@@ -1,6 +1,6 @@
 import { ConnectionProxy } from "../src";
 import { settings } from "../../rpc-cache-utils/src/config";
-import { Commitment, Connection, PublicKey } from "@solana/web3.js";
+import { Commitment, Connection } from "@solana/web3.js";
 
 const AMOUNT = 100;
 
@@ -28,43 +28,43 @@ const proxyCache = ConnectionProxy(
 
 (async () => {
   // Solana's
-  // const solanaStart = new Date();
-  // let i = 0;
-  // while (i < AMOUNT) {
-  //   //const solanasinlgestart = new Date()
-  //   // @ts-ignore
-  //   await originalConnection._rpcRequest("getProgramAccounts", [
-  //     "WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC",
-  //     // @ts-ignore
-  //     params
-  //     ]
-  //   )
-  //   i++;
-  //   // @ts-ignore
-  //   //console.log(`solana # ${i}: ${new Date() - solanasinlgestart}`)
-  // }
-  // const solanaEnd = new Date();
-  // // @ts-ignore
-  // console.log(`Solana's elapsed time: ${solanaEnd - solanaStart}`);
+  const solanaStart = new Date();
+  let i = 0;
+  while (i < AMOUNT) {
+    //const solanasinlgestart = new Date()
+    // @ts-ignore
+    await originalConnection._rpcRequest("getProgramAccounts", [
+      "WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC",
+      // @ts-ignore
+      params,
+    ]);
+    i++;
+    // @ts-ignore
+    //console.log(`solana # ${i}: ${new Date() - solanasinlgestart}`)
+  }
+  const solanaEnd = new Date();
+  // @ts-ignore
+  console.log(`Solana's elapsed time: ${solanaEnd - solanaStart}`);
 
   // cache's
   const cacheStart = new Date();
   let j = 0;
   let result: any = null;
   while (j < AMOUNT) {
-    //const proxyinlgestart = new Date()
     // @ts-ignore
     result = await proxyCache._rpcRequest("getProgramAccounts", [
       "WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC",
       // @ts-ignore
-      params
-      ]
-    );
+      params,
+    ]);
     j++;
     // @ts-ignore
-    //console.log(`cache # ${j}: ${new Date() - proxyinlgestart }`)
   }
   const cacheEnd = new Date();
-  // @ts-ignore
-  console.log(`Cache's elapsed time: ${cacheEnd - cacheStart}, results: ${result.result.length}`);
+  console.log(
+    // @ts-ignore
+    `Cache's elapsed time: ${cacheEnd - cacheStart}, results: ${
+      result.result.length
+    }`
+  );
 })();

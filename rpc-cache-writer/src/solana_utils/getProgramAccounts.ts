@@ -1,5 +1,4 @@
 import { PublicKey } from "@solana/web3.js";
-import bs58 from "bs58";
 import {
   connection,
   redisClient,
