@@ -27,8 +27,12 @@ export const ConnectionProxy = (
   const solanaRpcRequest = originalConnection._rpcRequest;
   const _rpcRequest = async (method: string, params: any) => {
     const mainParam = params[0];
+    const filters = params[1];
     let useProxyCache = false;
-    if (settings.cacheFunctions.names.indexOf(method) >= 0) {
+    if (
+      !(settings.notSupportedEncoding.indexOf(filters?.enconding) >= 0) &&
+      settings.cacheFunctions.names.indexOf(method) >= 0
+    ) {
       const configParams: Array<any> = (
         settings.cacheFunctions.params as Record<string, any>
       )[method];
