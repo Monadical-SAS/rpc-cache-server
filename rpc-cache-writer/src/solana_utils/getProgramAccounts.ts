@@ -16,7 +16,7 @@ export const getProgramAccounts = async (
   console.log(`Fetching: getProgramAccounts of ${programID}`);
   const resp = await (connection as any)._rpcRequest("getProgramAccounts", [
     programID,
-    { commitment: settings.commitment },
+    { commitment: settings.commitment, encoding: "base64" },
   ]);
   setRedisAccounts(resp.result, programID);
 
@@ -44,7 +44,7 @@ export const getProgramAccounts = async (
             // it actually has this attr, but the type doesn't have it
             rentEpoch: info.accountInfo.rentEpoch,
             owner: info.accountInfo.owner.toBase58(),
-            data: bs58.encode(Buffer.from(info.accountInfo.data)),
+            data: [info.accountInfo.data.toString(), "base64"],
           },
         };
         redisClient.hset(programID, pubkey, JSON.stringify(accountInfo));
