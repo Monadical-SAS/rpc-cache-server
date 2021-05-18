@@ -2,7 +2,7 @@ import { ConnectionProxy } from "../src";
 import { settings } from "../../rpc-cache-utils/src/config";
 import { Commitment, Connection } from "@solana/web3.js";
 
-const AMOUNT = 5;
+const AMOUNT = 100;
 
 const filters = [
   {
@@ -22,8 +22,8 @@ const originalConnection = new Connection(
 
 const proxyCache = ConnectionProxy(
   "https://solana-api.projectserum.com",
-  "http://localhost:3001"
-  //"https://qydfva5cui.execute-api.us-east-2.amazonaws.com/Prod/"
+  //"http://localhost:3001"
+  "http://18.116.68.79:3001"
   //@ts-ignore
 );
 
@@ -64,6 +64,6 @@ const proxyCache = ConnectionProxy(
   const cacheEnd = new Date();
   console.log(
     // @ts-ignore
-    `Cache's elapsed time: ${cacheEnd - cacheStart}, results: ${result}`
+    `Cache's elapsed time: ${cacheEnd - cacheStart}, results: ${result.result.length}`
   );
 })();
