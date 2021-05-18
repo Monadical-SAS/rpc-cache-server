@@ -6,7 +6,7 @@ const AMOUNT = 100;
 
 const filters = [
   {
-    dataSize: 34,
+    dataSize: 388,
   },
 ];
 const params = {
@@ -21,7 +21,7 @@ const originalConnection = new Connection(
 );
 
 const proxyCache = ConnectionProxy(
-  "https://solana-api.projectserum.com",
+  " https://raydium.rpcpool.com",
   //"http://localhost:3001"
   "http://18.116.68.79:3001"
   //@ts-ignore
@@ -35,7 +35,7 @@ const proxyCache = ConnectionProxy(
     //const solanasinlgestart = new Date()
     // @ts-ignore
     await originalConnection._rpcRequest("getProgramAccounts", [
-      "WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC",
+      "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
       // @ts-ignore
       params,
     ]);
@@ -54,7 +54,7 @@ const proxyCache = ConnectionProxy(
   while (j < AMOUNT) {
     // @ts-ignore
     result = await proxyCache._rpcRequest("getProgramAccounts", [
-      "WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC",
+      "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
       // @ts-ignore
       params,
     ]);
@@ -64,6 +64,8 @@ const proxyCache = ConnectionProxy(
   const cacheEnd = new Date();
   console.log(
     // @ts-ignore
-    `Cache's elapsed time: ${cacheEnd - cacheStart}, results: ${result.result.length}`
+    `Cache's elapsed time: ${cacheEnd - cacheStart}, results: ${
+      result.result.length
+    }`
   );
 })();
