@@ -22,7 +22,8 @@ const originalConnection = new Connection(
 
 const proxyCache = ConnectionProxy(
   "https://solana-api.projectserum.com",
-  "https://qydfva5cui.execute-api.us-east-2.amazonaws.com/Prod/"
+  "http://localhost:3001"
+  //"https://qydfva5cui.execute-api.us-east-2.amazonaws.com/Prod/"
   //@ts-ignore
 );
 
