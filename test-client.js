@@ -6,6 +6,7 @@ const axios = require("axios");
 const client = new JSONRPCClient((jsonRPCRequest) =>
     axios({
         method: "post",
+        //url: "https://qydfva5cui.execute-api.us-east-2.amazonaws.com/Prod/",
         url: "http://localhost:3001/json-rpc",
         headers: {
             "content-type": "application/json",
@@ -32,5 +33,9 @@ const params = {
   filters,
 }
 client
-    .request("getProgramAccounts", ["WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC", params]).catch(console.error)
-    .then((result) => console.log(result, result.length));
+    .request("getProgramAccounts", ["WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC", params])
+    .then((result) => {
+      console.log("fulfilled", result)
+    }, (result) => {
+      console.log("rejected", result)
+    });

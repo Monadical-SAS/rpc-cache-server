@@ -3,7 +3,6 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import { connection } from "../../rpc-cache-utils/src/connection";
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { getProgramAccounts } from "./solana_utils/getProgramAccounts";
 import { settings } from "../../rpc-cache-utils/src/config";
 
@@ -24,7 +23,7 @@ for (const name of settings.cacheFunctions.names) {
   }
 }
 
-app.post("/json-rpc", (req, res) => {
+app.post("/", (req, res) => {
   const jsonRPCRequest = req.body;
   // server.receive takes a JSON-RPC request and returns a Promise of a JSON-RPC response.
   console.log("received request", jsonRPCRequest.method);
@@ -49,6 +48,7 @@ app.post("/json-rpc", (req, res) => {
       }
     });
   } else {
+    console.log("not handled");
     (connection as any)
       ._rpcRequest(jsonRPCRequest.method, jsonRPCRequest.params)
       .catch((e: any) => {
@@ -61,13 +61,3 @@ app.post("/json-rpc", (req, res) => {
 });
 
 app.listen(3001);
-
-export const lambdaHandler = async (
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
-  const queries = JSON.stringify(event.queryStringParameters);
-  return {
-    statusCode: 200,
-    body: `Queries: ${queries}`,
-  };
-};
