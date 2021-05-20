@@ -1,5 +1,5 @@
 import { Connection } from "@solana/web3.js";
-import { getRedisClient } from "./redisClient";
+import { getRedisClient, RedisClientUser } from "./redisClient";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -9,4 +9,5 @@ export const connection = new Connection(
   "https://solana-api.projectserum.com/",
   "recent"
 );
-export const redisClient = getRedisClient();
+export const redisReadClient = getRedisClient(RedisClientUser.Reader);
+export const redisWriteClient = getRedisClient(RedisClientUser.Writer);
