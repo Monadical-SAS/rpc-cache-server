@@ -2,7 +2,7 @@ import { ConnectionProxy } from "../src";
 import { settings } from "../../rpc-cache-utils/src/config";
 import { Commitment, Connection } from "@solana/web3.js";
 
-const AMOUNT = 100;
+const AMOUNT = 10;
 
 const filters = [
   {
@@ -16,12 +16,14 @@ const params = {
 };
 
 const originalConnection = new Connection(
+  //"https://raydium.rpcpool.com",
   "https://solana-api.projectserum.com",
   settings.commitment as Commitment
 );
 
 const proxyCache = ConnectionProxy(
-  " https://raydium.rpcpool.com",
+  "https://solana-api.projectserum.com",
+  //"https://raydium.rpcpool.com",
   //"http://localhost:3001"
   "http://18.116.68.79:3001"
   //@ts-ignore

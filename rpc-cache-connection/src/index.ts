@@ -3,9 +3,13 @@ import { settings } from "../../rpc-cache-utils/src/config";
 import { parse as urlParse, UrlWithStringQuery } from "url";
 import { createRpcClient, createRpcRequest } from "./rpc-utils";
 
-const rpcRequestCreator = (url: UrlWithStringQuery, useHttps: boolean) => {
+const rpcRequestCreator = (
+  url: UrlWithStringQuery,
+  useHttps: boolean,
+  rpcFallback: any
+) => {
   const _rpcClient = createRpcClient(url.href, useHttps);
-  const _rpcRequest = createRpcRequest(_rpcClient);
+  const _rpcRequest = createRpcRequest(_rpcClient, rpcFallback);
   // const _rpcBatchRequest = createRpcBatchRequest(_rpcClient);
   return _rpcRequest;
 };
@@ -19,18 +23,19 @@ export const ConnectionProxy = (
     settings.commitment as Commitment
   );
 
-  const url = urlParse(cacheEnpoint);
-  const useHttps = url.protocol === "https:";
-  const proxyRpcCache = rpcRequestCreator(url, useHttps);
-
   // @ts-ignore
   const solanaRpcRequest = originalConnection._rpcRequest;
+
+  const url = urlParse(cacheEnpoint);
+  const useHttps = url.protocol === "https:";
+  const proxyRpcCache = rpcRequestCreator(url, useHttps, solanaRpcRequest);
+
   const _rpcRequest = async (method: string, params: any) => {
     const mainParam = params[0];
     const filters = params[1];
     let useProxyCache = false;
     if (
-      !(settings.notSupportedEncoding.indexOf(filters?.enconding) >= 0) &&
+      !(settings.unsupportedEncoding.indexOf(filters?.enconding) >= 0) &&
       settings.cacheFunctions.names.indexOf(method) >= 0
     ) {
       const configParams: Array<any> = (
