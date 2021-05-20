@@ -3,6 +3,7 @@ import babel from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import json from "@rollup/plugin-json";
+import nodePolyfills from 'rollup-plugin-node-polyfills';
 
 const env = process.env.NODE_ENV;
 const extensions = ['.js', '.ts'];
@@ -69,6 +70,7 @@ function generateConfig(configType, format) {
       'superstruct',
       'tweetnacl',
     ];
+    config.plugins.push(nodePolyfills());
 
   return config;
 }

@@ -1,7 +1,7 @@
 import { Commitment, Connection } from "@solana/web3.js";
-import { settings } from "../../rpc-cache-utils/src/config";
 import { parse as urlParse, UrlWithStringQuery } from "url";
 import { createRpcClient, createRpcRequest } from "./rpc-utils";
+import fetch from "node-fetch";
 
 const rpcRequestCreator = (
   url: UrlWithStringQuery,
@@ -14,51 +14,58 @@ const rpcRequestCreator = (
   return _rpcRequest;
 };
 
-export const ConnectionProxy = (
+export const ConnectionProxy = async (
   solanaEndpoint: string,
-  cacheEnpoint: string
-): Connection => {
-  const originalConnection = new Connection(
-    solanaEndpoint,
-    settings.commitment as Commitment
-  );
+  cacheEnpoint: string,
+  defaultCommitment: Commitment = "confirmed"
+): Promise<Connection> => {
+  try {
+    const settings = JSON.parse(
+      await fetch(`${cacheEnpoint}/settings`).then((res) => res.json())
+    );
+    const originalConnection = new Connection(
+      solanaEndpoint,
+      settings.commitment as Commitment
+    );
+    // @ts-ignore
+    const solanaRpcRequest = originalConnection._rpcRequest;
 
-  // @ts-ignore
-  const solanaRpcRequest = originalConnection._rpcRequest;
+    const url = urlParse(cacheEnpoint);
+    const useHttps = url.protocol === "https:";
+    const proxyRpcCache = rpcRequestCreator(url, useHttps, solanaRpcRequest);
 
-  const url = urlParse(cacheEnpoint);
-  const useHttps = url.protocol === "https:";
-  const proxyRpcCache = rpcRequestCreator(url, useHttps, solanaRpcRequest);
-
-  const _rpcRequest = async (method: string, params: any) => {
-    const mainParam = params[0];
-    const filters = params[1];
-    let useProxyCache = false;
-    if (
-      !(settings.unsupportedEncoding.indexOf(filters?.enconding) >= 0) &&
-      settings.cacheFunctions.names.indexOf(method) >= 0
-    ) {
-      const configParams: Array<any> = (
-        settings.cacheFunctions.params as Record<string, any>
-      )[method];
+    const _rpcRequest = async (method: string, params: any) => {
+      const mainParam = params[0];
+      const filters = params[1];
+      let useProxyCache = false;
       if (
-        Array.isArray(mainParam) &&
-        mainParam.every((param) => configParams.indexOf(param) >= 0)
+        !(settings.unsupportedEncoding.indexOf(filters?.enconding) >= 0) &&
+        settings.cacheFunctions.names.indexOf(method) >= 0
       ) {
-        useProxyCache = true;
-      } else if (configParams.indexOf(mainParam) >= 0) {
-        useProxyCache = true;
+        const configParams: Array<any> = (
+          settings.cacheFunctions.params as Record<string, any>
+        )[method];
+        if (
+          Array.isArray(mainParam) &&
+          mainParam.every((param) => configParams.indexOf(param) >= 0)
+        ) {
+          useProxyCache = true;
+        } else if (configParams.indexOf(mainParam) >= 0) {
+          useProxyCache = true;
+        }
       }
-    }
 
-    if (useProxyCache) {
-      return proxyRpcCache(method, params);
-    }
-    return solanaRpcRequest(method, params);
-  };
+      if (useProxyCache) {
+        return proxyRpcCache(method, params);
+      }
+      return solanaRpcRequest(method, params);
+    };
 
-  const connection: Connection = Object.assign(originalConnection, {
-    _rpcRequest: _rpcRequest,
-  });
-  return connection;
+    const connection: Connection = Object.assign(originalConnection, {
+      _rpcRequest: _rpcRequest,
+    });
+    return connection;
+  } catch {
+    return new Connection(solanaEndpoint, defaultCommitment);
+  }
 };

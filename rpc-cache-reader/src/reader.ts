@@ -30,6 +30,7 @@ app.post("/", (req, res) => {
   console.log("received request", jsonRPCRequest.method, jsonRPCRequest.params);
   const functionNames = settings.cacheFunctions.names;
   if (functionNames.indexOf(jsonRPCRequest.method) >= 0) {
+    console.log("RPC method found in the config file");
     server.receive(jsonRPCRequest).then((jsonRPCResponse) => {
       if (jsonRPCResponse && jsonRPCResponse.error) {
         console.log(
@@ -61,6 +62,10 @@ app.post("/", (req, res) => {
         res.json(resp);
       });
   }
+});
+
+app.get("/settings", (req, res) => {
+  res.json(JSON.stringify(settings));
 });
 
 app.listen(3001);
