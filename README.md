@@ -22,4 +22,144 @@ Currently, this project is only built to work with the [Solana](https://solana.c
 
 ### Running locally
 
-### Deploying to the cloud
+Requirements for usage locally:
+
+- `node` v15 or higher
+- `npm` v7 or higher
+- Redis v6 or higher
+- Docker
+
+Installing:
+
+```bash
+cd rpc-cache-server
+npm i
+```
+
+Create a .env file with the following contents:
+
+```
+ENV=local
+REDIS_SERVER_PRIMARY_URL=localhost
+REDIS_SERVER_READ_URL=localhost
+REDIS_SERVER_PORT=6379 #or whatever port you have Redis running on
+READER_PORT=3000
+WRITER_PORT=3001
+READER_CONTAINER_IMAGE_REPO_URL=none
+WRITER_CONTAINER_IMAGE_REPO_URL=none
+
+```
+
+Building:
+
+```bash
+tsc
+docker build -t rpc-cache-reader -f rpc-cache-reader/Dockerfile .
+docker build -t rpc-cache-writer -f rpc-cache-writer/Dockerfile .
+```
+
+Then, to run the project, execute:
+
+```bash
+docker run rpc-cache-writer:latest
+docker run rpc-cache-reader:latest
+```
+
+### Deploying to the AWS cloud
+
+You're going to want to setup some resources in AWS using the following services (**it's very important that all of these resources use the same VPC**):
+
+- Elastic Container Registry
+  - A repository for the reader container images
+  - A repository for the writer container images
+- Elastic Container Service
+  - A cluster for your reader service and a cluster for your writer
+  - Task definitions for both the reader and the writer
+  - Start a task in the writer cluster using the writer task definition
+  - Start an autoscaling service in the reader cluster using the reader task definition
+- ElastiCache
+  - Create a Redis cache cluster. The number of replica nodes you'll choose should depend on how much traffic you expect.
+
+**CloudFormation templates are under development. It's advised that you just wait for those to be finished as they will make deployment to the cloud much easier and straightforward.**
+
+If you want to deploy to the AWS cloud, you'll follow the steps above except for the .env file you'll have
+
+```
+ENV=aws
+REDIS_SERVER_PRIMARY_URL=[URL for primary node in ElastiCache cluster]
+REDIS_SERVER_READ_URL=[URL for read-only operations on ElastiCache cluster]
+REDIS_SERVER_PORT=6379 #or whatever port you have Redis running on
+READER_PORT=3000
+WRITER_PORT=3000
+READER_CONTAINER_IMAGE_REPO_URL=[URL for your reader container image repository]
+WRITER_CONTAINER_IMAGE_REPO_URL=[URL for your writer container image repository]
+```
+
+and instead of running the project you'll deploy it to AWS:
+
+```bash
+#Reader
+docker tag rpc-cache-reader:latest [URL for your reader container image repository]
+aws ecr get-login-password --region [region you are deploying to here] | sudo docker login --username AWS --password-stdin [URL for your reader container image repository]
+docker push [URL for your reader container image repository]
+
+#Writer
+docker tag rpc-cache-writer:latest [URL for your writer container image repository]
+aws ecr get-login-password --region [region you are deploying to here] | sudo docker login --username AWS --password-stdin [URL for your writer container image repository]
+docker push [URL for your writer container image repository]
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
