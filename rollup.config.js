@@ -2,6 +2,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import babel from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
+import json from "@rollup/plugin-json";
 
 const env = process.env.NODE_ENV;
 const extensions = ['.js', '.ts'];
@@ -18,6 +19,9 @@ function generateConfig(configType, format) {
         dedupe: ['bn.js', 'buffer'],
         extensions,
         preferBuiltins: !browser,
+      }),
+      json({
+        include: ["rpc-cache.config.json"],
       }),
       babel({
         exclude: '**/node_modules/**',
