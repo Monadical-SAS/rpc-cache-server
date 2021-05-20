@@ -18,6 +18,46 @@ This is exactly what this project seeks to do. There are three main components:
 
 Currently, this project is only built to work with the [Solana](https://solana.com/) blockchain. Other blockchains may be supported in the future.
 
+## Configuring for use with your project
+
+Configuration of what gets cached happens in `rpc-cache-utils/src/config.ts`. Here's an example:
+
+```typescript
+export const settings = {
+  commitment: "recent",
+  notSupportedEncoding: ["jsonParsed"],
+  cacheFunctions: {
+    names: ["getProgramAccounts"],
+    params: {
+      getProgramAccounts: [
+        "WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC",
+        "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+      ],
+    },
+    filters: {
+      getProgramAccounts: {
+        "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin": [
+          [
+            {
+              dataSize: 388,
+            },
+          ],
+        ],
+      },
+    },
+  },
+};
+```
+
+Explanations for each of the keys:
+
+- `commitment`: the commitment you want to use.
+- `notSupportedEncoding`: encodings currently not supported
+- `cacheFunctions`:
+  - `names`: A list of the [RPC API](https://docs.solana.com/developing/clients/jsonrpc-api) functions that you want to cache values of.
+  - `params`: An object where the keys are the names of the functions you want to cache and the values are the parameters that you want to use for those functions.
+- `filters`: An object where the keys are the names of the functions you want to cache and the values are objects that contain filters that get passed along with the RPC.
+
 ## Running the service
 
 ### Running locally
