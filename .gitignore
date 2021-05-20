@@ -12,6 +12,7 @@ yarn-debug.log*
 yarn-error.log*
 yarn.lock
 package-lock.json
+rpc-cache.config.json
 *.css
 *.css.map
 .vscode/*
