@@ -60,4 +60,4 @@ app.post("/", (req, res) => {
   }
 });
 
-app.listen(3001);
+app.listen(process.env.READER_PORT);
