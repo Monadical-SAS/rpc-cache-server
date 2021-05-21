@@ -129,6 +129,38 @@ Resources:
                 !Join [':', [!Ref 'StackName', 'PublicSubnet1']]
       TaskDefinition: !Ref 'WriterTaskDefinition'
 
+  # Reader
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: !Ref 'HealthCheckIntervalSeconds'
+      HealthCheckPath: !Ref 'HealthCheckPath'
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 5
+      TargetType: ip
+      Name: !Ref 'ReaderServiceName'
+      Port: !Ref 'ContainerPort'
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'StackName', 'VPCId']]
+    LoadBalancerRule:
+      Type: AWS::ElasticLoadBalancingV2::ListenerRule
+      Properties:
+        Actions:
+          - TargetGroupArn: !Ref 'TargetGroup'
+            Type: 'forward'
+        Conditions:
+          - Field: path-pattern
+            Values: [!Ref 'Path']
+        ListenerArn:
+          Fn::ImportValue:
+            !Join [':', [!Ref 'StackName', 'ReaderLoadBalancerListener']]
+        Priority: 1
+
   ReaderTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
