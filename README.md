@@ -58,6 +58,21 @@ Explanations for each of the keys:
   - `params`: An object where the keys are the names of the functions you want to cache and the values are the parameters that you want to use for those functions.
 - `filters`: An object where the keys are the names of the functions you want to cache and the values are objects that contain filters that get passed along with the RPC.
 
+### IMPORTANT NOTE: Connection Proxy
+
+In order for this project to work properly, we had to create a ConnectionProxy object that is meant to replace any use of the [Connection](https://solana-labs.github.io/solana-web3.js/classes/connection.html) object from [@solana/web3.js](https://github.com/solana-labs/solana-web3.js/). This allows this package to handle connections to a Solana RPC server and our cache service. If the RPC caching service goes down, it will fall back to the Solana RPC server specified.
+
+```typescript
+import { ConnectionProxy } from 'rpc-cache-server'
+// ...
+// <code>
+// ...
+const conn = ConnectionProxy(
+    "<rpcServerUrl>",
+    "<CacheServerUrl>"
+  )
+```
+
 ## Running the service
 
 ### Running locally
