@@ -60,7 +60,7 @@ Explanations for each of the keys:
 
 ### IMPORTANT NOTE: Connection Proxy
 
-In order for this project to work properly, we had to create a ConnectionProxy object that is meant to replace any use of the [Connection](https://solana-labs.github.io/solana-web3.js/classes/connection.html) object from [@solana/web3.js](https://github.com/solana-labs/solana-web3.js/). This allows this package to handle connections to a Solana RPC server and our cache service. If the RPC caching service goes down, it will fall back to the Solana RPC server specified.
+In order for this project to work properly, we had to create a ConnectionProxy async function that is meant to replace any use of the [Connection](https://solana-labs.github.io/solana-web3.js/classes/connection.html) object from [@solana/web3.js](https://github.com/solana-labs/solana-web3.js/). This allows this package to handle connections to a Solana RPC server and our cache service. If the RPC caching service goes down, it will fall back to the Solana RPC server specified.
 
 ```typescript
 import { ConnectionProxy } from 'rpc-cache-server'
