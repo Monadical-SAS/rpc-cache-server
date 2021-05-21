@@ -1,6 +1,6 @@
 {
   "name": "rpc-cache-server",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A server to cache results of (expensive) RPC requests made to the Solana JSON RPC API",
   "author": "Monadical",
   "license": "APACHE",
