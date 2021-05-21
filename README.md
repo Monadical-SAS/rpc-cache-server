@@ -20,12 +20,14 @@ Currently, this project is only built to work with the [Solana](https://solana.c
 
 ## Configuring for use with your project
 
-Configuration of what gets cached happens in `rpc-cache-utils/src/config.ts`. Here's an example:
+Configuration of what gets cached happens in `rpc-cache-utils/src/config.ts`.
+This file is used by the writer to know what should be pre-cached.
+
+Here's an example:
 
 ```typescript
 export const settings = {
   commitment: "recent",
-  notSupportedEncoding: ["jsonParsed"],
   cacheFunctions: {
     names: ["getProgramAccounts"],
     params: {
@@ -52,11 +54,10 @@ export const settings = {
 Explanations for each of the keys:
 
 - `commitment`: the commitment you want to use.
-- `notSupportedEncoding`: encodings currently not supported
 - `cacheFunctions`:
   - `names`: A list of the [RPC API](https://docs.solana.com/developing/clients/jsonrpc-api) functions that you want to cache values of.
-  - `params`: An object where the keys are the names of the functions you want to cache and the values are the parameters that you want to use for those functions.
-- `filters`: An object where the keys are the names of the functions you want to cache and the values are objects that contain filters that get passed along with the RPC.
+  - `params`: An optional object where the keys are the names of the functions you want to cache and the values are the parameters that you want to use for those functions.
+- `filters`: An optional object where the keys are the names of the functions you want to cache and the values are objects that contain filters that get passed along with the RPC.
 
 ### IMPORTANT NOTE: Connection Proxy
 
@@ -64,13 +65,22 @@ In order for this project to work properly, we had to create a ConnectionProxy a
 
 ```typescript
 import { ConnectionProxy } from 'rpc-cache-server'
-// ...
-// <code>
-// ...
-const conn = ConnectionProxy(
-    "<rpcServerUrl>",
-    "<CacheServerUrl>"
-  )
+
+/**
+ * Establish a JSON RPC connection and returns a Connection object that
+ * forwards the rpc method request to either solanaEndpoint or cacheEndpoint
+ * depending on the settings configuration in the cacheEndpoint server
+ *
+ * @param solanaEndpoint URL to the fullnode JSON RPC endpoint
+ * @param cacheEnpoint URL to the the cache reader
+ * @param defaultCommitment optional default commitment level used in case there is any error connecting to cacheEndpoint
+ * @return {<Promise<Connection>>}
+ */
+const conn = await ConnectionProxy(
+  "<rpcServerUrl>",
+  "<CacheServerUrl>",
+  "<defaultCommitment>"
+)
 ```
 
 ## Running the service

@@ -3,6 +3,8 @@ import { parse as urlParse, UrlWithStringQuery } from "url";
 import { createRpcClient, createRpcRequest } from "./rpc-utils";
 import fetch from "node-fetch";
 
+const UNSUPPORTED_ENCODINGS = ["jsonParsed"];
+
 const rpcRequestCreator = (
   url: UrlWithStringQuery,
   useHttps: boolean,
@@ -13,7 +15,16 @@ const rpcRequestCreator = (
   // const _rpcBatchRequest = createRpcBatchRequest(_rpcClient);
   return _rpcRequest;
 };
-
+/**
+ * Establish a JSON RPC connection and returns a Connection object that
+ * forwards the rpc method request to either solanaEndpoint or cacheEndpoint
+ * depending on the settings configuration in the cacheEndpoint server
+ *
+ * @param solanaEndpoint URL to the fullnode JSON RPC endpoint
+ * @param cacheEnpoint URL to the the cache reader
+ * @param defaultCommitment optional default commitment level used in case there is any error connecting to cacheEndpoint
+ * @return {<Promise<Connection>>}
+ */
 export const ConnectionProxy = async (
   solanaEndpoint: string,
   cacheEnpoint: string,
@@ -39,7 +50,7 @@ export const ConnectionProxy = async (
       const filters = params[1];
       let useProxyCache = false;
       if (
-        !(settings.unsupportedEncoding.indexOf(filters?.enconding) >= 0) &&
+        !(UNSUPPORTED_ENCODINGS.indexOf(filters?.enconding) >= 0) &&
         settings.cacheFunctions.names.indexOf(method) >= 0
       ) {
         const configParams: Array<any> = ((settings.cacheFunctions
