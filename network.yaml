@@ -76,13 +76,67 @@ Resources:
       SubnetId: !Ref PublicSubnet3
       RouteTableId: !Ref PublicRouteTable
 
+  ReaderLoadBalancerSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Access to the public facing load balancer
+        VpcId: !Ref 'VPC'
+        SecurityGroupIngress:
+          - CidrIp: 0.0.0.0/0
+            IpProtocol: -1
+
+  ReaderLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+        - !Ref PublicSubnet3
+      SecurityGroups: [!Ref 'ReaderLoadBalancerSecurityGroup']
+
+  DummyTargetGroupPublic:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 6
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      Name: "no-op"
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId: !Ref 'VPC'
+
+  ReaderLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - ReaderLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref 'DummyTargetGroupPublic'
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'ReaderLoadBalancer'
+      Port: 80
+      Protocol: HTTP
+
   WriterECSCluster:
     Type: AWS::ECS::Cluster
 
   WriterECSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access to the ECS containers
+      GroupDescription: Access to the Writer ECS containers
+      VpcId: !Ref 'VPC'
+
+  ReaderECSCluster:
+    Type: AWS::ECS::Cluster
+
+  ReaderECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the Reader ECS containers
       VpcId: !Ref 'VPC'
 
   ECSVPCRole:
@@ -105,10 +159,25 @@ Resources:
 
 Outputs:
   WriterClusterName:
-    Description: The name of the ECS cluster
+    Description: The name of the Writer ECS cluster
     Value: !Ref 'WriterECSCluster'
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'WriterClusterName' ] ]
+  ReaderClusterName:
+    Description: The name of the Reader ECS cluster
+    Value: !Ref 'ReaderECSCluster'
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'ReaderClusterName' ] ]
+  ReaderLoadBalancerUrl:
+    Description: The url of the external load balancer
+    Value: !Join ['', ['http://', !GetAtt 'ReaderLoadBalancer.DNSName']]
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'ReaderLoadBalancerUrl' ] ]
+  ReaderLoadBalancerListener:
+    Description: The ARN of the Reader load balancer's Listener
+    Value: !Ref ReaderLoadBalancerListener
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'ReaderLoadBalancerListener' ] ]
   ECSRole:
     Description: The ARN of the ECS role
     Value: !GetAtt 'ECSVPCRole.Arn'
@@ -140,7 +209,12 @@ Outputs:
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'PublicSubnet3' ] ]
   WriterECSSecurityGroup:
-    Description: A security group used to allow ECS containers to receive traffic
+    Description: A security group used to allow Writer ECS containers to receive traffic
     Value: !Ref 'WriterECSSecurityGroup'
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'WriterECSSecurityGroup' ] ]
+  ReaderECSSecurityGroup:
+    Description: A security group used to allow Reader ECS containers to receive traffic
+    Value: !Ref 'ReaderECSSecurityGroup'
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'ReaderECSSecurityGroup' ] ]
