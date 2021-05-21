@@ -5,19 +5,28 @@ import {
 } from "../../../rpc-cache-utils/src/connection";
 import { settings } from "../../../rpc-cache-utils/src/config";
 import { ParsedKeyedAccountInfo } from "../../../rpc-cache-utils/src/utils";
+import * as util from "util";
 
 const webSocketsIds: Map<string, number> = new Map();
 
 export const getProgramAccounts = async (
   programID: string,
+  filters: Array<any> | undefined,
   setWebSocket = false
 ): Promise<void> => {
-  console.log(`Fetching: getProgramAccounts of ${programID}`);
-  const resp = await (connection as any)._rpcRequest("getProgramAccounts", [
-    programID,
-    { commitment: settings.commitment, encoding: "base64" },
-  ]);
-  setRedisAccounts(resp.result, programID);
+  const lfilters = filters || [[]];
+  for (const filter of lfilters) {
+    console.log(
+      `Fetching: getProgramAccounts of ${programID} with filters: ${util.inspect(
+        filter
+      )}`
+    );
+    const resp = await (connection as any)._rpcRequest("getProgramAccounts", [
+      programID,
+      { commitment: settings.commitment, encoding: "base64", filters: filter },
+    ]);
+    setRedisAccounts(resp.result, programID);
+  }
 
   if (setWebSocket) {
     const prevSubId = webSocketsIds.get(programID);

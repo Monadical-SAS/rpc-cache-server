@@ -56,6 +56,7 @@ export function createRpcClient(url: string, useHttps: boolean): RpcClient {
         callback(new Error(`${res.status} ${res.statusText}: ${text}`));
       }
     } catch (err) {
+      console.log(`Error getting to RPC-CACHE-READER: ${err}`);
       callback(err);
     } finally {
       agentManager && agentManager.requestEnd();
@@ -65,15 +66,19 @@ export function createRpcClient(url: string, useHttps: boolean): RpcClient {
   return clientBrowser;
 }
 
-export function createRpcRequest(client: RpcClient): RpcRequest {
+export function createRpcRequest(
+  client: RpcClient,
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  rpcFallback: any
+): RpcRequest {
   return (method, args) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       client.request(method, args, (err: any, response: any) => {
         if (err) {
-          reject(err);
-          return;
+          resolve(rpcFallback(method, args));
+        } else {
+          resolve(response);
         }
-        resolve(response);
       });
     });
   };

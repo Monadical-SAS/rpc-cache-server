@@ -2,11 +2,11 @@ import { ConnectionProxy } from "../src";
 import { settings } from "../../rpc-cache-utils/src/config";
 import { Commitment, Connection } from "@solana/web3.js";
 
-const AMOUNT = 100;
+const AMOUNT = 10;
 
 const filters = [
   {
-    dataSize: 34,
+    dataSize: 388,
   },
 ];
 const params = {
@@ -16,13 +16,16 @@ const params = {
 };
 
 const originalConnection = new Connection(
+  //"https://raydium.rpcpool.com",
   "https://solana-api.projectserum.com",
   settings.commitment as Commitment
 );
 
 const proxyCache = ConnectionProxy(
   "https://solana-api.projectserum.com",
-  "http://localhost:3001"
+  //"https://raydium.rpcpool.com",
+  //"http://localhost:3001"
+  "http://18.116.68.79:3001"
   //@ts-ignore
 );
 
@@ -34,7 +37,7 @@ const proxyCache = ConnectionProxy(
     //const solanasinlgestart = new Date()
     // @ts-ignore
     await originalConnection._rpcRequest("getProgramAccounts", [
-      "WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC",
+      "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
       // @ts-ignore
       params,
     ]);
@@ -53,7 +56,7 @@ const proxyCache = ConnectionProxy(
   while (j < AMOUNT) {
     // @ts-ignore
     result = await proxyCache._rpcRequest("getProgramAccounts", [
-      "WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC",
+      "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
       // @ts-ignore
       params,
     ]);
