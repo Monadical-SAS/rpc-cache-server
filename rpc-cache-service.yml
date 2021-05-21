@@ -7,7 +7,10 @@ Parameters:
       these resources are put into.
   WriterServiceName:
     Type: String
-    Description: A human-readable name for the service.
+    Description: A human-readable name for the reader service.
+  ReaderServiceName:
+    Type: String
+    Description: A human-readable name for the reader service.
   HealthCheckPath:
     Type: String
     Default: /health
@@ -32,13 +35,17 @@ Parameters:
     Type: Number
     Default: 2048
     Description: How much memory in megabytes to give the container.
-  DesiredCount:
+  WriterDesiredTaskCount:
     Type: Number
     Default: 1
     Description: How many copies of the service task to run.
+  ReaderDesiredTaskCount:
+    Type: Number
+    Default: 10
+    Description: How many copies of the service task to run.
   CacheNodeCount:
     Type: Number
-    Default: 2
+    Default: 4
     Description: The number of cache nodes to run.
   CacheNodeType:
     Type: String
@@ -110,7 +117,7 @@ Resources:
       DeploymentConfiguration:
         MaximumPercent: 200
         MinimumHealthyPercent: 50
-      DesiredCount: !Ref 'DesiredCount'
+      DesiredCount: !Ref 'WriterDesiredTaskCount'
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -121,3 +128,52 @@ Resources:
             - Fn::ImportValue:
                 !Join [':', [!Ref 'StackName', 'PublicSubnet1']]
       TaskDefinition: !Ref 'WriterTaskDefinition'
+
+  ReaderTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'ReaderServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'StackName', 'ECSTaskExecutionRole']]
+      ContainerDefinitions:
+        - Name: !Ref 'ReaderServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'ReaderImageUrl'
+          PortMappings:
+            - ContainerPort: !Ref 'ContainerPort'
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref 'ReaderServiceName'
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Ref 'ReaderServiceName'
+
+  ReaderService:
+    Type: AWS::ECS::Service
+    Properties:
+      ReaderServiceName: !Ref 'ReadServiceName'
+      Cluster:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'StackName', 'ReaderClusterName']]
+      LaunchType: FARGATE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      DesiredCount: !Ref 'ReaderDesiredTaskCount'
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'ReaderECSSecurityGroup']]
+          Subnets:
+            - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'PublicSubnet1']]
+      TaskDefinition: !Ref 'ReaderTaskDefinition'
