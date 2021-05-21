@@ -1,6 +1,5 @@
 export const settings = {
   commitment: "recent",
-  unsupportedEncoding: ["jsonParsed"],
   cacheFunctions: {
     names: ["getProgramAccounts"],
     params: {

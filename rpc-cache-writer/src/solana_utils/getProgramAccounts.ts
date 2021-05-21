@@ -11,7 +11,7 @@ const webSocketsIds: Map<string, number> = new Map();
 
 export const getProgramAccounts = async (
   programID: string,
-  filters: Array<any>,
+  filters: Array<any> | undefined,
   setWebSocket = false
 ): Promise<void> => {
   const lfilters = filters || [[]];
