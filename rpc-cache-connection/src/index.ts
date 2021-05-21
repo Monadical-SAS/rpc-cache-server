@@ -42,10 +42,11 @@ export const ConnectionProxy = async (
         !(settings.unsupportedEncoding.indexOf(filters?.enconding) >= 0) &&
         settings.cacheFunctions.names.indexOf(method) >= 0
       ) {
-        const configParams: Array<any> = (
-          settings.cacheFunctions.params as Record<string, any>
-        )[method];
-        if (
+        const configParams: Array<any> = ((settings.cacheFunctions
+          .params as Record<string, any>) || {})[method];
+        if (!configParams) {
+          useProxyCache = true;
+        } else if (
           Array.isArray(mainParam) &&
           mainParam.every((param) => configParams.indexOf(param) >= 0)
         ) {
