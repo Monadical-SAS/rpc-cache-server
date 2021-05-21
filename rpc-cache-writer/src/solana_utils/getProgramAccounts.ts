@@ -1,24 +1,32 @@
 import { PublicKey } from "@solana/web3.js";
-import bs58 from "bs58";
 import {
   connection,
-  redisClient,
+  redisWriteClient,
 } from "../../../rpc-cache-utils/src/connection";
 import { settings } from "../../../rpc-cache-utils/src/config";
 import { ParsedKeyedAccountInfo } from "../../../rpc-cache-utils/src/utils";
+import * as util from "util";
 
 const webSocketsIds: Map<string, number> = new Map();
 
 export const getProgramAccounts = async (
   programID: string,
+  filters: Array<any> | undefined,
   setWebSocket = false
 ): Promise<void> => {
-  console.log(`Fetching: getProgramAccounts of ${programID}`);
-  const resp = await (connection as any)._rpcRequest("getProgramAccounts", [
-    programID,
-    { commitment: settings.commitment },
-  ]);
-  setRedisAccounts(resp.result, programID);
+  const lfilters = filters || [[]];
+  for (const filter of lfilters) {
+    console.log(
+      `Fetching: getProgramAccounts of ${programID} with filters: ${util.inspect(
+        filter
+      )}`
+    );
+    const resp = await (connection as any)._rpcRequest("getProgramAccounts", [
+      programID,
+      { commitment: settings.commitment, encoding: "base64", filters: filter },
+    ]);
+    setRedisAccounts(resp.result, programID);
+  }
 
   if (setWebSocket) {
     const prevSubId = webSocketsIds.get(programID);
@@ -44,10 +52,10 @@ export const getProgramAccounts = async (
             // it actually has this attr, but the type doesn't have it
             rentEpoch: info.accountInfo.rentEpoch,
             owner: info.accountInfo.owner.toBase58(),
-            data: bs58.encode(Buffer.from(info.accountInfo.data)),
+            data: [info.accountInfo.data.toString(), "base64"],
           },
         };
-        redisClient.hset(programID, pubkey, JSON.stringify(accountInfo));
+        redisWriteClient.hset(programID, pubkey, JSON.stringify(accountInfo));
       }
     );
     webSocketsIds.set(programID, subId);
@@ -72,6 +80,6 @@ const setRedisAccounts = (
       },
     };
     //console.log(`saving in cache ${pubkey} of ${programID}`)
-    redisClient.hset(programID, pubkey, JSON.stringify(accountInfo));
+    redisWriteClient.hset(programID, pubkey, JSON.stringify(accountInfo));
   }
 };

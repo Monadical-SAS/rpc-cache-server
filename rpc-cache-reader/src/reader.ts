@@ -3,9 +3,9 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import { connection } from "../../rpc-cache-utils/src/connection";
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { getProgramAccounts } from "./solana_utils/getProgramAccounts";
 import { settings } from "../../rpc-cache-utils/src/config";
+import * as util from "util";
 
 const server = new JSONRPCServer();
 
@@ -24,15 +24,18 @@ for (const name of settings.cacheFunctions.names) {
   }
 }
 
-app.post("/json-rpc", (req, res) => {
+app.post("/", (req, res) => {
   const jsonRPCRequest = req.body;
   // server.receive takes a JSON-RPC request and returns a Promise of a JSON-RPC response.
-  console.log("received request", jsonRPCRequest.method);
+  console.log("received request", jsonRPCRequest.method, jsonRPCRequest.params);
   const functionNames = settings.cacheFunctions.names;
   if (functionNames.indexOf(jsonRPCRequest.method) >= 0) {
+    console.log("RPC method found in the config file");
     server.receive(jsonRPCRequest).then((jsonRPCResponse) => {
       if (jsonRPCResponse && jsonRPCResponse.error) {
-        console.log("rejected: " + jsonRPCResponse.error);
+        console.log(
+          "rejected: " + util.inspect(jsonRPCResponse.error, { depth: null })
+        );
         (connection as any)
           ._rpcRequest(jsonRPCRequest.method, jsonRPCRequest.params)
           .catch((e: any) => {
@@ -49,6 +52,7 @@ app.post("/json-rpc", (req, res) => {
       }
     });
   } else {
+    console.log("not handled");
     (connection as any)
       ._rpcRequest(jsonRPCRequest.method, jsonRPCRequest.params)
       .catch((e: any) => {
@@ -60,14 +64,8 @@ app.post("/json-rpc", (req, res) => {
   }
 });
 
-app.listen(3001);
+app.get("/settings", (req, res) => {
+  res.json(JSON.stringify(settings));
+});
 
-export const lambdaHandler = async (
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
-  const queries = JSON.stringify(event.queryStringParameters);
-  return {
-    statusCode: 200,
-    body: `Queries: ${queries}`,
-  };
-};
+app.listen(process.env.READER_PORT);

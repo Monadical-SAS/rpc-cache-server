@@ -5,6 +5,10 @@ export interface ParsedKeyedAccountInfo {
     lamports: number;
     rentEpoch: number;
     owner: string;
-    data: Buffer | string;
+    data: any;
   };
+}
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

@@ -6,7 +6,8 @@ const axios = require("axios");
 const client = new JSONRPCClient((jsonRPCRequest) =>
     axios({
         method: "post",
-        url: "http://localhost:3001/json-rpc",
+        url: "http://18.116.68.79:3001",
+        //url: "http://localhost:3001/json-rpc",
         headers: {
             "content-type": "application/json",
         },
@@ -30,7 +31,17 @@ const params = {
   commitment: 'recent',
   encoding: 'base64',
   filters,
-}
-client
-    .request("getProgramAccounts", ["WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC", params]).catch(console.error)
-    .then((result) => console.log(result, result.length));
+};
+
+(async ()=> {
+  const cacheStart = new Date();
+  let res = null;
+  for  (let i =0; i<100; i++) {
+    res = await client.request("getProgramAccounts", ["WormT3McKhFJ2RkiGpdw9GKvNCrB2aB54gb2uV9MfQC", params])
+  }
+  const cacheEnd = new Date();
+  console.log(
+    // @ts-ignore
+    `Cache's elapsed time: ${cacheEnd - cacheStart}, results: ${res.length}`
+  );
+})();
