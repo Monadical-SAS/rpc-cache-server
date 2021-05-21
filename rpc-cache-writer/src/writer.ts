@@ -68,4 +68,4 @@ app.post("/", (req, res) => {
   return res.sendStatus(200);
 });
 
-app.listen(3003);
+app.listen(process.env.WRITER_PORT);

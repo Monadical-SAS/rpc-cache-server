@@ -1,5 +1,5 @@
 import { JSONRPCParams } from "json-rpc-2.0";
-import { redisClient } from "../../../rpc-cache-utils/src/connection";
+import { redisReadClient } from "../../../rpc-cache-utils/src/connection";
 import { ParsedKeyedAccountInfo } from "../../../rpc-cache-utils/src/utils";
 import bs58 from "bs58";
 
@@ -10,7 +10,7 @@ export const getProgramAccounts = async (
     if (params) {
       const programID = (params as any[])[0];
       const filters = (params as any[])[1];
-      redisClient.hvals(programID, function (err, reply) {
+      redisReadClient.hvals(programID, function (err, reply) {
         if (!reply || reply.length === 0 || err) {
           if (err) console.log(err);
           reject(err);

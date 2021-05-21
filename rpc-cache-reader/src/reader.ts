@@ -68,4 +68,4 @@ app.get("/settings", (req, res) => {
   res.json(JSON.stringify(settings));
 });
 
-app.listen(3001);
+app.listen(process.env.READER_PORT);

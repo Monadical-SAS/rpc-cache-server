@@ -1,7 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import {
   connection,
-  redisClient,
+  redisWriteClient,
 } from "../../../rpc-cache-utils/src/connection";
 import { settings } from "../../../rpc-cache-utils/src/config";
 import { ParsedKeyedAccountInfo } from "../../../rpc-cache-utils/src/utils";
@@ -55,7 +55,7 @@ export const getProgramAccounts = async (
             data: [info.accountInfo.data.toString(), "base64"],
           },
         };
-        redisClient.hset(programID, pubkey, JSON.stringify(accountInfo));
+        redisWriteClient.hset(programID, pubkey, JSON.stringify(accountInfo));
       }
     );
     webSocketsIds.set(programID, subId);
@@ -80,6 +80,6 @@ const setRedisAccounts = (
       },
     };
     //console.log(`saving in cache ${pubkey} of ${programID}`)
-    redisClient.hset(programID, pubkey, JSON.stringify(accountInfo));
+    redisWriteClient.hset(programID, pubkey, JSON.stringify(accountInfo));
   }
 };
