@@ -112,7 +112,7 @@ READER_PORT=3000
 WRITER_PORT=3001
 READER_CONTAINER_IMAGE_REPO_URL=none
 WRITER_CONTAINER_IMAGE_REPO_URL=none
-
+AWS_REGION=none
 ```
 
 Building:
@@ -156,20 +156,13 @@ READER_PORT=3000
 WRITER_PORT=3000
 READER_CONTAINER_IMAGE_REPO_URL=[URL for your reader container image repository]
 WRITER_CONTAINER_IMAGE_REPO_URL=[URL for your writer container image repository]
+AWS_REGION=[AWS region you're deploying to, for example us-east-2]
 ```
 
-and instead of running the project you'll build and deploy the Docker images to AWS:
+and instead of running the project you'll build and deploy the Docker images to AWS using the `build.sh` and `deploy.sh` scripts:
 
 ```bash
-#Reader
-docker build -t rpc-cache-reader -f rpc-cache-reader/Dockerfile .
-docker tag rpc-cache-reader:latest [URL for your reader container image repository]
-aws ecr get-login-password --region [region you are deploying to here] | sudo docker login --username AWS --password-stdin [URL for your reader container image repository]
-docker push [URL for your reader container image repository]
-
-#Writer
-docker build -t rpc-cache-writer -f rpc-cache-writer/Dockerfile .
-docker tag rpc-cache-writer:latest [URL for your writer container image repository]
-aws ecr get-login-password --region [region you are deploying to here] | sudo docker login --username AWS --password-stdin [URL for your writer container image repository]
-docker push [URL for your writer container image repository]
+chmod +x build.sh
+chmod +x deploy.sh
+sh -ac ' . ./.env; ./build.sh; ./deploy.sh;'
 ```
