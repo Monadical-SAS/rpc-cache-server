@@ -94,15 +94,13 @@ Building:
 
 ```bash
 tsc
-docker build -t rpc-cache-reader -f rpc-cache-reader/Dockerfile .
-docker build -t rpc-cache-writer -f rpc-cache-writer/Dockerfile .
 ```
 
 Then, to run the project, execute:
 
 ```bash
-docker run rpc-cache-writer:latest
-docker run rpc-cache-reader:latest
+node dist/lib/rpc-cache-writer/src/writer.js
+node dist/lib/rpc-cache-reader/src/reader.js
 ```
 
 ### Deploying to the AWS cloud
@@ -135,15 +133,17 @@ READER_CONTAINER_IMAGE_REPO_URL=[URL for your reader container image repository]
 WRITER_CONTAINER_IMAGE_REPO_URL=[URL for your writer container image repository]
 ```
 
-and instead of running the project you'll deploy it to AWS:
+and instead of running the project you'll build and deploy the Docker images to AWS:
 
 ```bash
 #Reader
+docker build -t rpc-cache-reader -f rpc-cache-reader/Dockerfile .
 docker tag rpc-cache-reader:latest [URL for your reader container image repository]
 aws ecr get-login-password --region [region you are deploying to here] | sudo docker login --username AWS --password-stdin [URL for your reader container image repository]
 docker push [URL for your reader container image repository]
 
 #Writer
+docker build -t rpc-cache-writer -f rpc-cache-writer/Dockerfile .
 docker tag rpc-cache-writer:latest [URL for your writer container image repository]
 aws ecr get-login-password --region [region you are deploying to here] | sudo docker login --username AWS --password-stdin [URL for your writer container image repository]
 docker push [URL for your writer container image repository]
