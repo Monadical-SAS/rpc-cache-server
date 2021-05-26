@@ -21,7 +21,10 @@ Parameters:
     Description: Number of seconds to wait between each health check.
   WriterImageUrl:
     Type: String
-    Description: The url of a docker image that will handle incoming traffic.
+    Description: The url of a docker image that will handle writes.
+  ReaderImageUrl:
+    Type: String
+    Description: The url of a docker image that will handle read requests.
   ContainerPort:
     Type: Number
     Default: 3000
@@ -45,7 +48,7 @@ Parameters:
     Description: How many copies of the service task to run.
   CacheNodeCount:
     Type: Number
-    Default: 4
+    Default: 1
     Description: The number of cache nodes to run.
   CacheNodeType:
     Type: String
@@ -53,14 +56,19 @@ Parameters:
     Description: The type of EC2 instance to use for cache nodes
   RedisVersion:
     Type: String
-    Default: "6.0.5"
+    Default: "6.x"
     Description: The version of Redis to use for the cache
+  Path:
+    Type: String
+    Default: "*"
+    Description: A path on the public load balancer that this service should be connected to.
 
 Resources:
   # The cache itself
   CacheSubnetGroup:
     Type: AWS::ElastiCache::SubnetGroup
     Properties:
+      Description: Subnet group for the RPC Cache
       SubnetIds:
         - Fn::ImportValue:
                 !Join [':', [!Ref 'StackName', 'PublicSubnet1']]
@@ -78,6 +86,9 @@ Resources:
       Engine: "redis"
       EngineVersion: !Ref "RedisVersion"
       NumCacheNodes: !Ref "CacheNodeCount"
+      VpcSecurityGroupIds:
+        - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'ReaderECSSecurityGroup']]
 
   # Writer
   WriterTaskDefinition:
@@ -109,7 +120,7 @@ Resources:
   WriterService:
     Type: AWS::ECS::Service
     Properties:
-      WriterServiceName: !Ref 'WriterServiceName'
+      ServiceName: !Ref 'WriterServiceName'
       Cluster:
         Fn::ImportValue:
           !Join [':', [!Ref 'StackName', 'WriterClusterName']]
@@ -137,7 +148,7 @@ Resources:
       HealthCheckIntervalSeconds: !Ref 'HealthCheckIntervalSeconds'
       HealthCheckPath: !Ref 'HealthCheckPath'
       HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 5
+      HealthCheckTimeoutSeconds: 4
       HealthyThresholdCount: 5
       TargetType: ip
       Name: !Ref 'ReaderServiceName'
@@ -147,19 +158,20 @@ Resources:
       VpcId:
         Fn::ImportValue:
           !Join [':', [!Ref 'StackName', 'VPCId']]
-    LoadBalancerRule:
-      Type: AWS::ElasticLoadBalancingV2::ListenerRule
-      Properties:
-        Actions:
-          - TargetGroupArn: !Ref 'TargetGroup'
-            Type: 'forward'
-        Conditions:
-          - Field: path-pattern
-            Values: [!Ref 'Path']
-        ListenerArn:
-          Fn::ImportValue:
-            !Join [':', [!Ref 'StackName', 'ReaderLoadBalancerListener']]
-        Priority: 1
+
+  LoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref 'TargetGroup'
+          Type: 'forward'
+      Conditions:
+        - Field: path-pattern
+          Values: [!Ref 'Path']
+      ListenerArn:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'StackName', 'ReaderLoadBalancerListener']]
+      Priority: 1
 
   ReaderTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -190,7 +202,7 @@ Resources:
   ReaderService:
     Type: AWS::ECS::Service
     Properties:
-      ReaderServiceName: !Ref 'ReadServiceName'
+      ServiceName: !Ref 'ReaderServiceName'
       Cluster:
         Fn::ImportValue:
           !Join [':', [!Ref 'StackName', 'ReaderClusterName']]
