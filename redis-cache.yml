@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  StackName:
+    Type: String
+    Description: The name of the networking stack that these resources are put into.
+  CacheNodeCount:
+    Type: Number
+    Default: 3
+    Description: The number of cache nodes to run.
+  CacheNodeType:
+    Type: String
+    Default: "cache.t2.small"
+    Description: The type of EC2 instance to use for cache nodes
+  RedisVersion:
+    Type: String
+    Default: "6.x"
+    Description: The version of Redis to use for the cache
+
+
+Resources:
+  CacheSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: Subnet group for the RPC Cache
+      SubnetIds:
+        - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'PublicSubnet1']]
+        - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'PublicSubnet2']]
+        - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'PublicSubnet3']]
+  RPCCache:
+    Type: AWS::ElastiCache::ReplicationGroup
+    Properties:
+      AutoMinorVersionUpgrade: yes
+      AutomaticFailoverEnabled: true
+      CacheNodeType: !Ref "CacheNodeType"
+      CacheSubnetGroupName: !Ref "CacheSubnetGroup"
+      ReplicationGroupDescription: RPC Cache
+      # ClusterName: "rpc-cache"
+      Engine: "redis"
+      EngineVersion: !Ref "RedisVersion"
+      NumCacheClusters: !Ref "CacheNodeCount"
+      SecurityGroupIds:
+        - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'ReaderECSSecurityGroup']]

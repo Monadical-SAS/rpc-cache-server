@@ -64,35 +64,11 @@ Parameters:
     Description: A path on the public load balancer that this service should be connected to.
 
 Resources:
-  # The cache itself
-  CacheSubnetGroup:
-    Type: AWS::ElastiCache::SubnetGroup
-    Properties:
-      Description: Subnet group for the RPC Cache
-      SubnetIds:
-        - Fn::ImportValue:
-                !Join [':', [!Ref 'StackName', 'PublicSubnet1']]
-        - Fn::ImportValue:
-                !Join [':', [!Ref 'StackName', 'PublicSubnet2']]
-        - Fn::ImportValue:
-                !Join [':', [!Ref 'StackName', 'PublicSubnet3']]
-  RPCCache:
-    Type: AWS::ElastiCache::CacheCluster
-    Properties:
-      AutoMinorVersionUpgrade: yes
-      CacheNodeType: !Ref "CacheNodeType"
-      CacheSubnetGroupName: !Ref "CacheSubnetGroup"
-      ClusterName: "rpc-cache"
-      Engine: "redis"
-      EngineVersion: !Ref "RedisVersion"
-      NumCacheNodes: !Ref "CacheNodeCount"
-      VpcSecurityGroupIds:
-        - Fn::ImportValue:
-                !Join [':', [!Ref 'StackName', 'ReaderECSSecurityGroup']]
-
   # Writer
   WriterTaskDefinition:
     Type: AWS::ECS::TaskDefinition
+    DependsOn:
+      - RPCCache
     Properties:
       Family: !Ref 'WriterServiceName'
       Cpu: !Ref 'ContainerCpu'
@@ -119,6 +95,8 @@ Resources:
 
   WriterService:
     Type: AWS::ECS::Service
+    DependsOn:
+      - RPCCache
     Properties:
       ServiceName: !Ref 'WriterServiceName'
       Cluster:
@@ -175,6 +153,8 @@ Resources:
 
   ReaderTaskDefinition:
     Type: AWS::ECS::TaskDefinition
+    DependsOn:
+      - RPCCache
     Properties:
       Family: !Ref 'ReaderServiceName'
       Cpu: !Ref 'ContainerCpu'
@@ -201,6 +181,8 @@ Resources:
 
   ReaderService:
     Type: AWS::ECS::Service
+    DependsOn:
+      - RPCCache
     Properties:
       ServiceName: !Ref 'ReaderServiceName'
       Cluster:
