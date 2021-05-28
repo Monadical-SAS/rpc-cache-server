@@ -138,6 +138,16 @@ Resources:
     Properties:
       GroupDescription: Access to the Reader ECS containers
       VpcId: !Ref 'VPC'
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 6379
+        ToPort: 6379
+        CidrIp: 0.0.0.0/0
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 3000
+        ToPort: 3000
+        CidrIp: 0.0.0.0/0
 
   ECSVPCRole:
     Type: AWS::IAM::Role

@@ -195,3 +195,7 @@ Resources:
             - Fn::ImportValue:
                 !Join [':', [!Ref 'StackName', 'PublicSubnet1']]
       TaskDefinition: !Ref 'ReaderTaskDefinition'
+      LoadBalancers:
+        - ContainerName: !Ref 'ReaderServiceName'
+          ContainerPort: !Ref 'ContainerPort'
+          TargetGroupArn: !Ref 'TargetGroup'
