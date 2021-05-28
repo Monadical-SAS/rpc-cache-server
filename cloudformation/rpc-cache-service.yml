@@ -67,8 +67,6 @@ Resources:
   # Writer
   WriterTaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DependsOn:
-      - RPCCache
     Properties:
       Family: !Ref 'WriterServiceName'
       Cpu: !Ref 'ContainerCpu'
@@ -95,8 +93,6 @@ Resources:
 
   WriterService:
     Type: AWS::ECS::Service
-    DependsOn:
-      - RPCCache
     Properties:
       ServiceName: !Ref 'WriterServiceName'
       Cluster:
@@ -153,8 +149,6 @@ Resources:
 
   ReaderTaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DependsOn:
-      - RPCCache
     Properties:
       Family: !Ref 'ReaderServiceName'
       Cpu: !Ref 'ContainerCpu'
@@ -181,8 +175,6 @@ Resources:
 
   ReaderService:
     Type: AWS::ECS::Service
-    DependsOn:
-      - RPCCache
     Properties:
       ServiceName: !Ref 'ReaderServiceName'
       Cluster:
