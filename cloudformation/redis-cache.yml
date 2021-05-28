@@ -38,10 +38,9 @@ Resources:
       CacheNodeType: !Ref "CacheNodeType"
       CacheSubnetGroupName: !Ref "CacheSubnetGroup"
       ReplicationGroupDescription: RPC Cache
-      # ClusterName: "rpc-cache"
       Engine: "redis"
       EngineVersion: !Ref "RedisVersion"
       NumCacheClusters: !Ref "CacheNodeCount"
       SecurityGroupIds:
         - Fn::ImportValue:
-                !Join [':', [!Ref 'StackName', 'ReaderECSSecurityGroup']]
+                !Join [':', [!Ref 'StackName', 'RedisSecurityGroup']]
