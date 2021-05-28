@@ -276,3 +276,8 @@ Outputs:
     Value: !Ref 'ReaderECSSecurityGroup'
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'ReaderECSSecurityGroup' ] ]
+  RedisSecurityGroup:
+    Description: A security group used to allow Redis ElastiCache to receive traffic
+    Value: !Ref 'RedisSecurityGroup'
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'RedisSecurityGroup' ] ]
