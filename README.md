@@ -130,39 +130,16 @@ node dist/lib/rpc-cache-reader/src/reader.js
 
 ### Deploying to the AWS cloud
 
-You're going to want to setup some resources in AWS using the following services (**it's very important that all of these resources use the same VPC**):
+For deploying to AWS, it's highly recommended that you use the CloudFormation templates that are available in the `cloudformation` directory. These automate much of the deployment process and save time. To start, you're going to want to have Docker and the AWS CLI installed. Next, follow these steps:
 
-- Elastic Container Registry
-  - A repository for the reader container images
-  - A repository for the writer container images
-- Elastic Container Service
-  - A cluster for your reader service and a cluster for your writer
-  - Task definitions for both the reader and the writer
-  - Start a task in the writer cluster using the writer task definition
-  - Start an autoscaling service in the reader cluster using the reader task definition
-- ElastiCache
-  - Create a Redis cache cluster. The number of replica nodes you'll choose should depend on how much traffic you expect.
-
-**CloudFormation templates are under development. It's advised that you just wait for those to be finished as they will make deployment to the cloud much easier and straightforward.**
-
-If you want to deploy to the AWS cloud, you'll follow the steps above except for the .env file you'll have
-
-```
-ENV=aws
-REDIS_SERVER_PRIMARY_URL=[URL for primary node in ElastiCache cluster]
-REDIS_SERVER_READ_URL=[URL for read-only operations on ElastiCache cluster]
-REDIS_SERVER_PORT=6379 #or whatever port you have Redis running on
-READER_PORT=3000
-WRITER_PORT=3000
-READER_CONTAINER_IMAGE_REPO_URL=[URL for your reader container image repository]
-WRITER_CONTAINER_IMAGE_REPO_URL=[URL for your writer container image repository]
-AWS_REGION=[AWS region you're deploying to, for example us-east-2]
-```
-
-and instead of running the project you'll build and deploy the Docker images to AWS using the `build.sh` and `deploy.sh` scripts:
-
-```bash
-chmod +x build.sh
-chmod +x deploy.sh
-sh -ac ' . ./.env; ./build.sh; ./deploy.sh;'
-```
+1. Deploy the VPC network all of your AWS resources will live inside of: `aws cloudformation create-stack --stack-name rpc-cache-network --template-body file://cloudformation/network.yml --capabilities CAPABILITY_NAMED_IAM`. Wait for this step to complete before moving onto the next (you can check the status on the CloudFormation Stacks dashboard on the AWS console).
+2. Deploy the Redis ElastiCache cluster that will be used for actually caching the RPC results `aws cloudformation create-stack --stack-name redis-cache --template-body file://cloudformation/redis-cache.yml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=StackName,ParameterValue=rpc-cache-network`. Wait for this step to complete before moving onto the next (you can check the status on the CloudFormation Stacks dashboard on the AWS console).
+3. Now you're going to need to get the endpoint URLs for the Redis cluster you just created. Go to the description of your ElastiCache cluster (again, on the AWS web console). In the description section you'll see a Primary Endpoint and a Reader Endpoint. Copy the Primary Endpoint value (without the port number) into the `REDIS_SERVER_PRIMARY_URL` field in your `.env` file and the Reader Endpoint value into the `REDIS_SERVER_READ_URL` field. Make sure to include `https://` in the beginning of each value. For example, if the Primary Endpoint listed is `rer1g58c88hy1m0s.c3bjfg.ng.0001.use2.cache.amazonaws.com:6379`, the value you will put in `REDIS_SERVER_PRIMARY_URL` will be `https://rer1g58c88hy1m0s.c3bjfg.ng.0001.use2.cache.amazonaws.com`.
+4. Next, create CloudWatch log groups in the AWS console. Under Logs, select "Log Groups" then create 2 new log groups. One should be called `rpc-reader-service` and the other should be called `rpc-writer-service`.
+5. Once this is complete, go to the Elastic Container Registry in the AWS console and create 2 new container repositories. One should be called `rpc-cache-reader` and the other should be called `rpc-cache-writer`. Copy the URIs for each into the corresponding fields in the `.env` file.
+6. Next, build the Docker images for the reader and writer and push them up to the repositories you just created. This can be accomplished by running the following commands:
+   1. `chmod +x build-and-push-writer.sh`
+   2. `chmod +x build-and-push-reader.sh`
+   3. `sudo sh -ac ' . ./.env; ./build-and-push-writer.sh; ./build-and-push-reader.sh;'`
+7. Finally, you can set up the reader and writer services. Do this by running `aws cloudformation create-stack --stack-name rpc-cache-service --template-body file://cloudformation/rpc-cache-service.yml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=StackName,ParameterValue=rpc-cache-network ParameterKey=WriterImageUrl,ParameterValue=URL_TO_LATEST_IMAGE_IN_YOUR_WRITER_REPO_HERE ParameterKey=ReaderServiceName,ParameterValue=rpc-reader-service ParameterKey=WriterServiceName,ParameterValue=rpc-writer-service ParameterKey=ReaderImageUrl,ParameterValue=URL_TO_LATEST_IMAGE_IN_YOUR_READER_REPO_HERE`. Replace the `URL_TO_LATEST_IMAGE_IN_YOUR_WRITER_REPO_HERE` and `URL_TO_LATEST_IMAGE_IN_YOUR_READER_REPO_HERE` with the URLs from step 5 along with `:latest` at the end.
+8. Once that stack is completely created (you can check the status on the CloudFormation stacks view on the AWS console), go to your list of load balancers in EC2 (go to the EC2 Dashboard, scroll down in the left sidebar to Load Balancing, then select Load Balancers) and copy the DNS name that's listed. This is the endpoint you will use to get values from the cache.

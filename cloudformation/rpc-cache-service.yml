@@ -1,0 +1,201 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  StackName:
+    Type: String
+    Description: The name of the networking stack that 
+      these resources are put into.
+  WriterServiceName:
+    Type: String
+    Description: A human-readable name for the reader service.
+  ReaderServiceName:
+    Type: String
+    Description: A human-readable name for the reader service.
+  HealthCheckPath:
+    Type: String
+    Default: /health
+    Description: Path to perform the healthcheck on each instance.
+  HealthCheckIntervalSeconds:
+    Type: Number
+    Default: 5
+    Description: Number of seconds to wait between each health check.
+  WriterImageUrl:
+    Type: String
+    Description: The url of a docker image that will handle writes.
+  ReaderImageUrl:
+    Type: String
+    Description: The url of a docker image that will handle read requests.
+  ContainerPort:
+    Type: Number
+    Default: 3000
+    Description: The port number the application inside the docker container 
+      is binding to.
+  ContainerCpu:
+    Type: Number
+    Default: 1024
+    Description: How much CPU to give the container. 1024 is 1 CPU.
+  ContainerMemory:
+    Type: Number
+    Default: 2048
+    Description: How much memory in megabytes to give the container.
+  WriterDesiredTaskCount:
+    Type: Number
+    Default: 1
+    Description: How many copies of the service task to run.
+  ReaderDesiredTaskCount:
+    Type: Number
+    Default: 10
+    Description: How many copies of the service task to run.
+  CacheNodeCount:
+    Type: Number
+    Default: 1
+    Description: The number of cache nodes to run.
+  CacheNodeType:
+    Type: String
+    Default: "cache.t2.small"
+    Description: The type of EC2 instance to use for cache nodes
+  RedisVersion:
+    Type: String
+    Default: "6.x"
+    Description: The version of Redis to use for the cache
+  Path:
+    Type: String
+    Default: "*"
+    Description: A path on the public load balancer that this service should be connected to.
+
+Resources:
+  # Writer
+  WriterTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'WriterServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'StackName', 'ECSTaskExecutionRole']]
+      ContainerDefinitions:
+        - Name: !Ref 'WriterServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'WriterImageUrl'
+          PortMappings:
+            - ContainerPort: !Ref 'ContainerPort'
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref 'WriterServiceName'
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Ref 'WriterServiceName'
+
+  WriterService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Ref 'WriterServiceName'
+      Cluster:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'StackName', 'WriterClusterName']]
+      LaunchType: FARGATE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      DesiredCount: !Ref 'WriterDesiredTaskCount'
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'WriterECSSecurityGroup']]
+          Subnets:
+            - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'PublicSubnet1']]
+      TaskDefinition: !Ref 'WriterTaskDefinition'
+
+  # Reader
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: !Ref 'HealthCheckIntervalSeconds'
+      HealthCheckPath: !Ref 'HealthCheckPath'
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 4
+      HealthyThresholdCount: 5
+      TargetType: ip
+      Name: !Ref 'ReaderServiceName'
+      Port: !Ref 'ContainerPort'
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'StackName', 'VPCId']]
+
+  LoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref 'TargetGroup'
+          Type: 'forward'
+      Conditions:
+        - Field: path-pattern
+          Values: [!Ref 'Path']
+      ListenerArn:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'StackName', 'ReaderLoadBalancerListener']]
+      Priority: 1
+
+  ReaderTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'ReaderServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'StackName', 'ECSTaskExecutionRole']]
+      ContainerDefinitions:
+        - Name: !Ref 'ReaderServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'ReaderImageUrl'
+          PortMappings:
+            - ContainerPort: !Ref 'ContainerPort'
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref 'ReaderServiceName'
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Ref 'ReaderServiceName'
+
+  ReaderService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Ref 'ReaderServiceName'
+      Cluster:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'StackName', 'ReaderClusterName']]
+      LaunchType: FARGATE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      DesiredCount: !Ref 'ReaderDesiredTaskCount'
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'ReaderECSSecurityGroup']]
+          Subnets:
+            - Fn::ImportValue:
+                !Join [':', [!Ref 'StackName', 'PublicSubnet1']]
+      TaskDefinition: !Ref 'ReaderTaskDefinition'
+      LoadBalancers:
+        - ContainerName: !Ref 'ReaderServiceName'
+          ContainerPort: !Ref 'ContainerPort'
+          TargetGroupArn: !Ref 'TargetGroup'
