@@ -6,7 +6,7 @@ const axios = require("axios");
 const client = new JSONRPCClient((jsonRPCRequest) =>
     axios({
         method: "post",
-        url: "http://18.116.68.79:3001",
+        url: "http://rpc-c-Reade-1DB4I8WGOVKD6-905008564.us-east-2.elb.amazonaws.com",
         //url: "http://localhost:3001/json-rpc",
         headers: {
             "content-type": "application/json",
