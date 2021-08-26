@@ -11,7 +11,7 @@ const MAX_URI_LENGTH = 200;
 const MAX_CREATOR_LEN = 32 + 1 + 1;
 const MAX_CREATOR_LIMIT = 5;
 
-export interface ParsedAccountBase {
+interface ParsedAccountBase {
   pubkey: StringPublicKey;
   account: AccountInfo<Buffer>;
   info: any; // TODO: change to unknown
@@ -19,7 +19,7 @@ export interface ParsedAccountBase {
 
 type StringPublicKey = string;
 
-export interface ParsedAccount<T> extends ParsedAccountBase {
+interface ParsedAccount<T> extends ParsedAccountBase {
   info: T;
 }
 
