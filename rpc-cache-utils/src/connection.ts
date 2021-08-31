@@ -6,7 +6,7 @@ dotenv.config();
 
 console.log("creating connection");
 export const connection = new Connection(
-  "https://solana-api.projectserum.com/",
+  "https://api.mainnet-beta.solana.com/",
   "recent"
 );
 export const redisReadClient = getRedisClient(RedisClientUser.Reader);
