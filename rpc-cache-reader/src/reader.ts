@@ -1,5 +1,5 @@
 import { JSONRPCResponse, JSONRPCServer } from "json-rpc-2.0";
-import express from "express";
+import express, { RequestHandler } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import { connection } from "../../rpc-cache-utils/src/connection";
@@ -10,7 +10,7 @@ import * as util from "util";
 const server = new JSONRPCServer();
 
 const app = express();
-app.use(bodyParser.json());
+app.use(bodyParser.json() as RequestHandler);
 app.use(cors());
 
 for (const name of settings.cacheFunctions.names) {
