@@ -56,7 +56,9 @@ class WhitelistedCreator {
   }
 }
 
-function getFiltersForMetadataProgram(whitelistedCreators: ParsedAccount<WhitelistedCreator>[]) {
+function getFiltersForMetadataProgram(
+  whitelistedCreators: ParsedAccount<WhitelistedCreator>[]
+) {
   let filters = [];
   for (let i = 0; i < MAX_CREATOR_LIMIT; i++) {
     for (let j = 0; j < whitelistedCreators.length; j++) {
@@ -100,12 +102,16 @@ export const settings = {
     },
     filters: {
       getProgramAccounts: {
-        METAPLEX_ID: [
-          {
-            dataSize: MAX_WHITELISTED_CREATOR_SIZE,
-          },
+        [METAPLEX_ID]: [
+          [
+            {
+              dataSize: MAX_WHITELISTED_CREATOR_SIZE,
+            },
+          ],
         ],
-        METADATA_PROGRAM_ID: getFiltersForMetadataProgram(whitelistedCreators),
+        [METADATA_PROGRAM_ID]: [
+          getFiltersForMetadataProgram(whitelistedCreators),
+        ],
       },
     },
   },
