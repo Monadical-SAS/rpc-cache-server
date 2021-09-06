@@ -28,7 +28,7 @@ const callCorrespondingCachedMethod = async (
   }
 };
 
-(async () => {
+const preCache = async () => {
   for (const name of settings.cacheFunctions.names) {
     const params = (settings.cacheFunctions.params as Record<string, any>)[
       name
@@ -52,7 +52,9 @@ const callCorrespondingCachedMethod = async (
     }
   }
   console.log("Finished Populating cache");
-})();
+}
+
+preCache();
 
 app.post("/", (req, res) => {
   // when this is called, it means a cache miss happened and the cache needs to be written to.
