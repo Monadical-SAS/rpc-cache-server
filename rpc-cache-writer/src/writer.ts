@@ -65,7 +65,7 @@ async function handleCacheMiss() {
 
 app.post("/", (req, res) => {
 
-  (async () => await handleCacheMiss());
+  (async () => await handleCacheMiss())();
 
   // // when this is called, it means a cache miss happened and the cache needs to be written to.
   // // to do this, make an RPC call to the full node and write the value to cache.
