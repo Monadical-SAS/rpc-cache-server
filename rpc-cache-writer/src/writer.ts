@@ -56,18 +56,28 @@ const preCache = async () => {
 
 preCache();
 
+async function handleCacheMiss() {
+  // TODO: Ask Solana for the info
+  // TODO: Respond to reader with results
+  // TODO: Fill the cache with those results
+  // TODO: If a WebSocket needs to be opened to watch for changes, open it
+}
+
 app.post("/", (req, res) => {
-  // when this is called, it means a cache miss happened and the cache needs to be written to.
-  // to do this, make an RPC call to the full node and write the value to cache.
-  const { method, mainParam, filters } = req.body;
-  const functionNames = settings.cacheFunctions.names;
-  if (functionNames.indexOf(method) >= 0) {
-    console.log(`Cache invalidation: ${method} - ${mainParam}`);
-    (async () => {
-      await callCorrespondingCachedMethod(method, mainParam, filters, true);
-    })();
-  }
-  return res.sendStatus(200);
+
+  (async () => await handleCacheMiss());
+
+  // // when this is called, it means a cache miss happened and the cache needs to be written to.
+  // // to do this, make an RPC call to the full node and write the value to cache.
+  // const { method, mainParam, filters } = req.body;
+  // const functionNames = settings.cacheFunctions.names;
+  // if (functionNames.indexOf(method) >= 0) {
+  //   console.log(`Cache invalidation: ${method} - ${mainParam}`);
+  //   (async () => {
+  //     await callCorrespondingCachedMethod(method, mainParam, filters, true);
+  //   })();
+  // }
+  // return res.sendStatus(200);
 });
 
 app.listen(process.env.WRITER_PORT);
