@@ -3,6 +3,8 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import { getProgramAccounts } from "./solana_utils/getProgramAccounts";
 import { settings } from "../../rpc-cache-utils/src/config";
+import { connection } from "../../rpc-cache-utils/src/connection";
+import { Connection } from "@solana/web3.js";
 
 const app = express();
 app.use(bodyParser.json());
@@ -52,20 +54,39 @@ const preCache = async () => {
     }
   }
   console.log("Finished Populating cache");
-}
+};
 
 preCache();
 
-async function handleCacheMiss() {
+type RPCCallInfo = {
+  method: string;
+  param: any;
+  filters: Array<any> | undefined;
+};
+
+function getConnectionMethodForRPCMethod(connection: Connection, method: string) {
+  switch(method) {
+    case "getProgramAccounts": return connection.getProgramAccounts
+    case "getMultipleAccounts": return connection.getMultipleAccountsInfo
+  }
+}
+
+async function handleCacheMiss(rpcCallInfo: RPCCallInfo) {
   // TODO: Ask Solana for the info
+  // Get corresponding Connection method for the RPC method
+  const {method, param, filters} = rpcCallInfo;
+  const connMethod = getConnectionMethodForRPCMethod(connection, method);
+  // Call that method with the appropriate parameters and store the results
+
   // TODO: Respond to reader with results
   // TODO: Fill the cache with those results
   // TODO: If a WebSocket needs to be opened to watch for changes, open it
 }
 
 app.post("/", (req, res) => {
-
-  (async () => await handleCacheMiss())();
+  const { method, mainParam, filters } = req.body;
+  const rpcCallInfo = { method: method, param: mainParam, filters: filters };
+  (async () => await handleCacheMiss(rpcCallInfo))();
 
   // // when this is called, it means a cache miss happened and the cache needs to be written to.
   // // to do this, make an RPC call to the full node and write the value to cache.
