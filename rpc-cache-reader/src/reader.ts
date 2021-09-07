@@ -1,4 +1,4 @@
-import { JSONRPCResponse, JSONRPCServer } from "json-rpc-2.0";
+import { JSONRPCParams, JSONRPCResponse, JSONRPCServer } from "json-rpc-2.0";
 import express, { RequestHandler } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
@@ -53,16 +53,34 @@ app.post("/", (req, res) => {
     });
   } else {
     console.log("not handled");
-    (connection as any)
-      ._rpcRequest(jsonRPCRequest.method, jsonRPCRequest.params)
-      .catch((e: any) => {
-        res.json({ error: e });
-      })
-      .then((resp: JSONRPCResponse) => {
-        res.json(resp);
-      });
+    // Add handler function so that it gets handled in the future
+    server.addMethod(
+      jsonRPCRequest.method,
+      genericSolanaRPCHandler(jsonRPCRequest, res)
+    );
   }
 });
+
+function genericSolanaRPCHandler(jsonRPCRequest: any, res: any) {
+  return async (params: Partial<JSONRPCParams> | undefined) => {
+    return new Promise((resolve, reject) => {
+      if (params) {
+        resolve(
+          (connection as any)
+            ._rpcRequest(jsonRPCRequest.method, jsonRPCRequest.params)
+            .catch((e: any) => {
+              res.json({ error: e });
+            })
+            .then((resp: JSONRPCResponse) => {
+              res.json(resp);
+            })
+        );
+      } else {
+        reject("No parameters provided");
+      }
+    });
+  };
+}
 
 app.get("/settings", (req, res) => {
   res.json(JSON.stringify(settings));
