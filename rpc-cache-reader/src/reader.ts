@@ -13,9 +13,12 @@ const app = express();
 app.use(bodyParser.json() as RequestHandler);
 app.use(cors());
 
+let seenMethodNames = new Set();
+
 for (const name of settings.cacheFunctions.names) {
   switch (name) {
     case "getProgramAccounts": {
+      seenMethodNames.add(name);
       server.addMethod("getProgramAccounts", getProgramAccounts);
       break;
     }
@@ -28,7 +31,7 @@ app.post("/", (req, res) => {
   const jsonRPCRequest = req.body;
   // server.receive takes a JSON-RPC request and returns a Promise of a JSON-RPC response.
   console.log("received request", jsonRPCRequest.method, jsonRPCRequest.params);
-  if ((server as any).nameToMethodDictionary[jsonRPCRequest.method]) {
+  if (seenMethodNames.has(jsonRPCRequest.method)) {
     console.log("RPC method found in the config file");
     server.receive(jsonRPCRequest).then((jsonRPCResponse) => {
       if (jsonRPCResponse && jsonRPCResponse.error) {
@@ -53,6 +56,7 @@ app.post("/", (req, res) => {
   } else {
     console.log("not handled");
     // Add handler function so that it gets handled in the future
+    seenMethodNames.add(jsonRPCRequest.method);
     server.addMethod(
       jsonRPCRequest.method,
       genericSolanaRPCHandler(jsonRPCRequest, res)
