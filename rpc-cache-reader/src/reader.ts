@@ -28,7 +28,6 @@ app.post("/", (req, res) => {
   const jsonRPCRequest = req.body;
   // server.receive takes a JSON-RPC request and returns a Promise of a JSON-RPC response.
   console.log("received request", jsonRPCRequest.method, jsonRPCRequest.params);
-  const functionNames = settings.cacheFunctions.names;
   if ((server as any).nameToMethodDictionary[jsonRPCRequest.method]) {
     console.log("RPC method found in the config file");
     server.receive(jsonRPCRequest).then((jsonRPCResponse) => {
