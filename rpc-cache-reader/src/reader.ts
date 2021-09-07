@@ -34,6 +34,7 @@ app.post("/", (req, res) => {
   if (seenMethodNames.has(jsonRPCRequest.method)) {
     console.log("RPC method found in the config file");
     server.receive(jsonRPCRequest).then((jsonRPCResponse) => {
+      // TODO: Add ability to handle cache misses for methods that are already in seenMethodNames.
       if (jsonRPCResponse && jsonRPCResponse.error) {
         console.log(
           "rejected: " + util.inspect(jsonRPCResponse.error, { depth: null })
