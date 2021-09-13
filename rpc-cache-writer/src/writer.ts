@@ -5,7 +5,7 @@ import { getProgramAccounts } from "./solana_utils/getProgramAccounts";
 import { settings } from "../../rpc-cache-utils/src/config";
 import { connection } from "../../rpc-cache-utils/src/connection";
 import { Connection } from "@solana/web3.js";
-import { JSONRPCRequest } from "json-rpc-2.0";
+import { JSONRPCParams, JSONRPCRequest, JSONRPCResponse } from "json-rpc-2.0";
 
 const app = express();
 app.use(bodyParser.json());
@@ -59,13 +59,25 @@ const preCache = async () => {
 
 preCache();
 
+async function makeSolanaRPCRequest(
+  method: string,
+  params: JSONRPCParams | undefined
+) {
+  // This is just going to make a raw Solana RPC request
+  return (connection as any)._rpcRequest(method, params);
+}
+
 app.post("/cache-miss", (req, res) => {
   const request = req.body as JSONRPCRequest;
   let rpcResponse;
-  makeSolanaRPCRequest(request.method, request.params).then((response: any) => {
-    rpcResponse = response;
-    res.json(response);
-  });
+  makeSolanaRPCRequest(request.method, request.params)
+    .catch((e: any) => {
+      res.json(e);
+    })
+    .then((response: JSONRPCResponse) => {
+      rpcResponse = response;
+      res.json(response);
+    });
   populateCacheWithResults(rpcResponse);
   // TODO: If a WebSocket needs to be opened to watch for changes, open it
 });
