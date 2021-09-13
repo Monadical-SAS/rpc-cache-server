@@ -1,12 +1,17 @@
-import { JSONRPCParams, JSONRPCResponse, JSONRPCServer } from "json-rpc-2.0";
-import express, { RequestHandler } from "express";
-import bodyParser from "body-parser";
+import {
+  JSONRPCParams,
+  JSONRPCResponse,
+  JSONRPCServer,
+} from "json-rpc-2.0";
+import express, { RequestHandler, response } from "express";
+import bodyParser, { json } from "body-parser";
 import cors from "cors";
 import { connection } from "../../rpc-cache-utils/src/connection";
 import { getProgramAccounts } from "./solana_utils/getProgramAccounts";
 import { settings } from "../../rpc-cache-utils/src/config";
 import * as util from "util";
 import { JSONRPCRequest } from "json-rpc-2.0";
+import { client, client as writerClient } from "../../rpc-cache-utils/src/writerClient";
 
 const server = new JSONRPCServer();
 
@@ -17,6 +22,7 @@ app.use(cors());
 let seenRPCs = new Set<[any, any]>();
 
 for (const name of settings.cacheFunctions.names) {
+  // TODO: Reform how this pre-caching is handled.
   switch (name) {
     case "getProgramAccounts": {
       seenRPCs.add([name, ""]);
@@ -34,14 +40,21 @@ app.post("/", (req, res) => {
   console.log("received request", jsonRPCRequest.method, jsonRPCRequest.params);
   if (seenRPCs.has([jsonRPCRequest.method, jsonRPCRequest.params])) {
     console.log("This RPC has been seen.");
-    res.json(getCachedValue(jsonRPCRequest)); 
+    res.json(getCachedValue(jsonRPCRequest));
   } else {
     console.log("This RPC has not been seen yet. Going to cache now.");
     seenRPCs.add([jsonRPCRequest.method, jsonRPCRequest.params]);
     const writerResponse = askWriterForValue(jsonRPCRequest);
-    res.json(writerResponse);
+    writerResponse.then((jsonRPCResponse) => {
+      res.json(jsonRPCResponse);
+    });
   }
 });
+
+async function askWriterForValue(jsonRPCRequest: JSONRPCRequest) {
+  // Make JSON-RPC request to the Writer and return the value that the Writer gives back
+  return await client.request(jsonRPCRequest.method, jsonRPCRequest.params);  
+}
 
 function genericSolanaRPCHandler(jsonRPCRequest: JSONRPCRequest, res: any) {
   return async (params: Partial<JSONRPCParams> | undefined) => {
