@@ -5,6 +5,7 @@ import { getProgramAccounts } from "./solana_utils/getProgramAccounts";
 import { settings } from "../../rpc-cache-utils/src/config";
 import { connection } from "../../rpc-cache-utils/src/connection";
 import { Connection } from "@solana/web3.js";
+import { JSONRPCRequest } from "json-rpc-2.0";
 
 const app = express();
 app.use(bodyParser.json());
@@ -58,47 +59,15 @@ const preCache = async () => {
 
 preCache();
 
-type RPCCallInfo = {
-  method: string;
-  param: any;
-  filters: Array<any> | undefined;
-};
-
-function getConnectionMethodForRPCMethod(connection: Connection, method: string) {
-  switch(method) {
-    case "getProgramAccounts": return connection.getProgramAccounts
-    case "getMultipleAccounts": return connection.getMultipleAccountsInfo
-  }
-}
-
-async function handleCacheMiss(rpcCallInfo: RPCCallInfo) {
-  // TODO: Ask Solana for the info
-  // Get corresponding Connection method for the RPC method
-  const {method, param, filters} = rpcCallInfo;
-  const connMethod = getConnectionMethodForRPCMethod(connection, method);
-  // Call that method with the appropriate parameters and store the results
-
-  // TODO: Respond to reader with results
-  // TODO: Fill the cache with those results
+app.post("/cache-miss", (req, res) => {
+  const request = req.body as JSONRPCRequest;
+  let rpcResponse;
+  makeSolanaRPCRequest(request.method, request.params).then((response: any) => {
+    rpcResponse = response;
+    res.json(response);
+  });
+  populateCacheWithResults(rpcResponse);
   // TODO: If a WebSocket needs to be opened to watch for changes, open it
-}
-
-app.post("/", (req, res) => {
-  const { method, mainParam, filters } = req.body;
-  const rpcCallInfo = { method: method, param: mainParam, filters: filters };
-  (async () => await handleCacheMiss(rpcCallInfo))();
-
-  // // when this is called, it means a cache miss happened and the cache needs to be written to.
-  // // to do this, make an RPC call to the full node and write the value to cache.
-  // const { method, mainParam, filters } = req.body;
-  // const functionNames = settings.cacheFunctions.names;
-  // if (functionNames.indexOf(method) >= 0) {
-  //   console.log(`Cache invalidation: ${method} - ${mainParam}`);
-  //   (async () => {
-  //     await callCorrespondingCachedMethod(method, mainParam, filters, true);
-  //   })();
-  // }
-  // return res.sendStatus(200);
 });
 
 app.listen(process.env.WRITER_PORT);
