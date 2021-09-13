@@ -3,7 +3,10 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import { getProgramAccounts } from "./solana_utils/getProgramAccounts";
 import { settings } from "../../rpc-cache-utils/src/config";
-import { connection } from "../../rpc-cache-utils/src/connection";
+import {
+  connection,
+  redisWriteClient,
+} from "../../rpc-cache-utils/src/connection";
 import { Connection } from "@solana/web3.js";
 import { JSONRPCParams, JSONRPCRequest, JSONRPCResponse } from "json-rpc-2.0";
 
@@ -67,9 +70,20 @@ async function makeSolanaRPCRequest(
   return (connection as any)._rpcRequest(method, params);
 }
 
+function populateCacheWithResults(
+  method: string,
+  params: JSONRPCParams | undefined,
+  rpcResponse: JSONRPCResponse
+) {
+  // Need to use method name and params as the key, response as the value
+  let result = rpcResponse.result;
+  redisWriteClient.hset(method, JSON.stringify(params), JSON.stringify(result));
+  throw new Error("Function not implemented.");
+}
+
 app.post("/cache-miss", (req, res) => {
   const request = req.body as JSONRPCRequest;
-  let rpcResponse;
+  let rpcResponse: JSONRPCResponse;
   makeSolanaRPCRequest(request.method, request.params)
     .catch((e: any) => {
       res.json(e);
@@ -77,8 +91,9 @@ app.post("/cache-miss", (req, res) => {
     .then((response: JSONRPCResponse) => {
       rpcResponse = response;
       res.json(response);
+
+      populateCacheWithResults(request.method, request.params, rpcResponse);
     });
-  populateCacheWithResults(rpcResponse);
   // TODO: If a WebSocket needs to be opened to watch for changes, open it
 });
 
