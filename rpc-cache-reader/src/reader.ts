@@ -52,9 +52,13 @@ app.post("/", (req, res) => {
     console.log("This RPC has not been seen yet. Going to cache now.");
     seenRPCs.add([jsonRPCRequest.method, jsonRPCRequest.params]);
     const writerResponse = askWriterForValue(jsonRPCRequest);
-    writerResponse.then((jsonRPCResponse) => {
-      res.json(jsonRPCResponse);
-    });
+    writerResponse
+      .catch((e: any) => {
+        res.json({ error: e });
+      })
+      .then((jsonRPCResponse) => {
+        res.json(jsonRPCResponse);
+      });
   }
 });
 
