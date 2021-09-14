@@ -1,17 +1,18 @@
-import {
-  JSONRPCParams,
-  JSONRPCResponse,
-  JSONRPCServer,
-} from "json-rpc-2.0";
+import { JSONRPCParams, JSONRPCResponse, JSONRPCServer } from "json-rpc-2.0";
 import express, { RequestHandler, response } from "express";
-import bodyParser, { json } from "body-parser";
+import bodyParser from "body-parser";
 import cors from "cors";
-import { connection } from "../../rpc-cache-utils/src/connection";
+import {
+  connection,
+  redisReadClient,
+} from "../../rpc-cache-utils/src/connection";
 import { getProgramAccounts } from "./solana_utils/getProgramAccounts";
 import { settings } from "../../rpc-cache-utils/src/config";
-import * as util from "util";
 import { JSONRPCRequest } from "json-rpc-2.0";
-import { client, client as writerClient } from "../../rpc-cache-utils/src/writerClient";
+import {
+  client,
+  client as writerClient,
+} from "../../rpc-cache-utils/src/writerClient";
 
 const server = new JSONRPCServer();
 
@@ -34,6 +35,12 @@ for (const name of settings.cacheFunctions.names) {
   }
 }
 
+function getCachedValue(jsonRPCRequest: JSONRPCRequest): any {
+  const method = jsonRPCRequest.method;
+  const params = jsonRPCRequest.params;
+  return redisReadClient.hget(method, JSON.stringify(params));
+}
+
 app.post("/", (req, res) => {
   const jsonRPCRequest = req.body as JSONRPCRequest;
   // server.receive takes a JSON-RPC request and returns a Promise of a JSON-RPC response.
@@ -53,7 +60,7 @@ app.post("/", (req, res) => {
 
 async function askWriterForValue(jsonRPCRequest: JSONRPCRequest) {
   // Make JSON-RPC request to the Writer and return the value that the Writer gives back
-  return await client.request(jsonRPCRequest.method, jsonRPCRequest.params);  
+  return await client.request(jsonRPCRequest.method, jsonRPCRequest.params);
 }
 
 function genericSolanaRPCHandler(jsonRPCRequest: JSONRPCRequest, res: any) {
