@@ -10,7 +10,6 @@ import { getProgramAccounts } from "./solana_utils/getProgramAccounts";
 import { settings } from "../../rpc-cache-utils/src/config";
 import { JSONRPCRequest } from "json-rpc-2.0";
 import {
-  client,
   client as writerClient,
 } from "../../rpc-cache-utils/src/writerClient";
 
@@ -64,7 +63,7 @@ app.post("/", (req, res) => {
 
 async function askWriterForValue(jsonRPCRequest: JSONRPCRequest) {
   // Make JSON-RPC request to the Writer and return the value that the Writer gives back
-  return await client.request(jsonRPCRequest.method, jsonRPCRequest.params);
+  return await writerClient.request(jsonRPCRequest.method, jsonRPCRequest.params);
 }
 
 function genericSolanaRPCHandler(jsonRPCRequest: JSONRPCRequest, res: any) {
