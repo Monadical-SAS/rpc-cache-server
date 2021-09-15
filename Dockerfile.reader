@@ -1,10 +1,12 @@
-FROM node:15-buster
+FROM node:16-buster
 
-ARG port=3000
-
-COPY . .
+ARG port=2999
+WORKDIR /app
+COPY ./package.json /app/
 
 RUN npm install
+
+COPY . /app/
 
 EXPOSE $port
 

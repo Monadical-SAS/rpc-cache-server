@@ -1,6 +1,8 @@
-import { JSONRPCClient } from "json-rpc-2.0";
+import { JSONRPCClient, JSONRPCRequest } from "json-rpc-2.0";
 
-export const client = new JSONRPCClient((jsonRPCRequest) => {
+const writerURL = "http://localhost:3001"
+
+export const client = new JSONRPCClient(async (jsonRPCRequest: JSONRPCRequest) => {
   fetch(writerURL + "/cache-miss", {
     method: "POST",
     headers: { "content-type": "application/json" },
