@@ -1,4 +1,4 @@
-import express, { response } from "express";
+import express, { RequestHandler } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import redis from "redis";
@@ -8,7 +8,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-app.use(bodyParser.json());
+app.use(bodyParser.json() as RequestHandler);
 app.use(cors());
 
 app.post("/", (req, res) => {
