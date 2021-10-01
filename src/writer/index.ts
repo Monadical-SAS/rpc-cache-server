@@ -5,6 +5,9 @@ import redis from "redis";
 import { JSONRPCParams, JSONRPCResponse } from "json-rpc-2.0";
 import axios from "axios";
 import { Connection } from "@solana/web3.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());

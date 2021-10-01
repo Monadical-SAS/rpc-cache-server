@@ -3,6 +3,9 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import redis from "redis";
 import axios from "axios";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());

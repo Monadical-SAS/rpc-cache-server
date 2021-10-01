@@ -12,4 +12,4 @@ COPY . /app/
 EXPOSE $port
 
 # Command can be overwritten by providing a different command in the template directly.
-CMD ["node", "dist/lib/rpc-cache-writer/src/writer.js"]
+CMD ["node", "dist/writer/index.js"]
